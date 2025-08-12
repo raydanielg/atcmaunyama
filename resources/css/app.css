@@ -1,0 +1,205 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* From Uiverse.io by umairmanzoor1143 */
+.loader {
+  width: 50px;
+  aspect-ratio: 1.154;
+  position: relative;
+  background: conic-gradient(
+    from 120deg at 50% 64%,
+    #0000,
+    #ff1919 1deg 120deg,
+    #0000 121deg
+  );
+  animation: l27-0 1.5s infinite cubic-bezier(0.3, 1, 0, 1);
+}
+
+/* ---- Custom Login Page Styles ---- */
+.login-wrapper {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem 1.5rem;
+  background-color: transparent;
+}
+
+.login-card {
+  width: 100%;
+  max-width: 28rem; /* 448px */
+  background: #ffffff;
+  border: 1px solid rgba(17, 24, 39, 0.08); /* subtle border */
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+  border-radius: 0.75rem; /* 12px */
+  padding: 2rem; /* 32px */
+}
+
+.login-logo {
+  display: block;
+  height: 40px;
+  width: auto;
+  margin: 0 auto;
+}
+
+.login-title {
+  margin-top: 1.5rem;
+  text-align: center;
+  font-size: 1.5rem; /* 24px */
+  line-height: 2.25rem; /* 36px */
+  font-weight: 700;
+  color: #111827; /* gray-900 */
+}
+
+.login-field {
+  margin-top: 1rem;
+}
+
+.login-label {
+  display: block;
+  font-size: 0.875rem; /* 14px */
+  line-height: 1.25rem; /* 20px */
+  font-weight: 500;
+  color: #374151; /* gray-700 */
+}
+
+.login-input {
+  margin-top: 0.5rem;
+  display: block;
+  width: 100%;
+  border-radius: 0.5rem;
+  background: #ffffff;
+  color: #111827;
+  padding: 0.625rem 0.75rem;
+  font-size: 1rem;
+  line-height: 1.5rem;
+  border: 1px solid #e5e7eb; /* gray-200 */
+}
+
+.login-input::placeholder { color: #9ca3af; /* gray-400 */ }
+
+.login-input:focus { outline: 2px solid #6366f1; outline-offset: 0; }
+
+.login-actions {
+  margin-top: 1.25rem;
+}
+
+.login-submit {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  border-radius: 0.5rem;
+  background: #6366f1; /* indigo-500 */
+  color: #fff;
+  padding: 0.625rem 0.75rem;
+  font-size: 0.938rem; /* ~15px */
+  line-height: 1.5rem;
+  font-weight: 600;
+  transition: background-color 0.2s ease;
+}
+
+.login-submit:hover {
+  background: #818cf8; /* indigo-400 */
+}
+
+.login-submit:disabled {
+  opacity: 0.6;
+}
+
+.login-help {
+  margin-top: 2rem;
+  text-align: center;
+  font-size: 0.875rem;
+  color: #6b7280; /* gray-500 */
+}
+
+.login-help a {
+  font-weight: 600;
+  color: #818cf8; /* indigo-400 */
+}
+
+.login-help a:hover {
+  color: #a5b4fc; /* lighter indigo */
+}
+
+/* ---- Login Background (Blurred) ---- */
+.login-page {
+  position: relative;
+  min-height: 100vh;
+  overflow: hidden;
+}
+
+.login-bg {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.login-bg::before {
+  content: "";
+  position: absolute;
+  inset: -20px; /* extend to avoid edge artifacts when blurred */
+  background-image: url('https://images.unsplash.com/photo-1524995997946-a1c2e315a42f?auto=format&fit=crop&w=1600&q=80');
+  background-size: cover;
+  background-position: center;
+  filter: grayscale(60%) blur(10px) brightness(0.85);
+  transform: scale(1.05);
+}
+
+.login-overlay {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at center, rgba(17,24,39,0.15) 0%, rgba(17,24,39,0.25) 100%);
+}
+
+.login-foreground {
+  position: relative;
+  z-index: 1;
+}
+
+.loader:before,
+.loader:after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: inherit;
+  transform-origin: 50% 66%;
+  animation: l27-1 1.5s infinite;
+}
+
+.loader:after {
+  --s: -1;
+}
+
+@keyframes l27-0 {
+  0%,
+  30% {
+    transform: rotate(0);
+  }
+
+  70% {
+    transform: rotate(120deg);
+  }
+
+  70.01%,
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes l27-1 {
+  0% {
+    transform: rotate(calc(var(--s, 1) * 120deg)) translate(0);
+  }
+
+  30%,
+  70% {
+    transform: rotate(calc(var(--s, 1) * 120deg))
+      translate(calc(var(--s, 1) * -5px), 10px);
+  }
+
+  100% {
+    transform: rotate(calc(var(--s, 1) * 120deg)) translate(0);
+  }
+}
