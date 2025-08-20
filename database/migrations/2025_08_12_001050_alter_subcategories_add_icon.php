@@ -11,7 +11,7 @@ return new class extends Migration
         if (Schema::hasTable('subcategories')) {
             Schema::table('subcategories', function (Blueprint $table) {
                 if (!Schema::hasColumn('subcategories', 'icon')) {
-                    $table->text('icon')->nullable()->after('name');
+                    $table->text('icon')->nullable();
                 }
             });
         }

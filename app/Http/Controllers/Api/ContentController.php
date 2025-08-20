@@ -7,6 +7,9 @@ use App\Models\Level;
 use App\Models\Subject;
 use App\Models\SchoolClass;
 use App\Models\Note;
+use App\Models\Category;
+use App\Models\Subcategory;
+use App\Models\Material;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 
@@ -81,6 +84,91 @@ class ContentController extends Controller
         ]);
     }
 
+    public function categories(Request $request)
+    {
+        $q = Category::query();
+        if ($search = $request->query('q')) {
+            $q->where('name', 'like', "%{$search}%");
+        }
+        $categories = $q->orderBy('name')->paginate(50, ['id','name','icon']);
+        return response()->json([
+            'data' => $categories->items(),
+            'pagination' => [
+                'current_page' => $categories->currentPage(),
+                'last_page' => $categories->lastPage(),
+                'per_page' => $categories->perPage(),
+                'total' => $categories->total(),
+            ],
+        ]);
+    }
+
+    public function subcategories(Request $request)
+    {
+        $q = Subcategory::query()->with('category:id,name');
+        if ($cid = $request->query('category_id')) { $q->where('category_id', $cid); }
+        if (($year = $request->query('year')) !== null && $year !== '') { $q->where('year', $year); }
+        if ($search = $request->query('q')) { $q->where('name','like',"%{$search}%"); }
+
+        $subcats = $q->orderBy('name')->paginate(50, ['id','name','category_id','year','icon']);
+        $data = collect($subcats->items())->map(function ($s) {
+            return [
+                'id' => $s->id,
+                'name' => $s->name,
+                'category_id' => $s->category_id,
+                'year' => $s->year,
+                'icon' => $s->icon,
+                'category' => $s->category ? ['id' => $s->category->id, 'name' => $s->category->name] : null,
+            ];
+        });
+
+        return response()->json([
+            'data' => $data,
+            'pagination' => [
+                'current_page' => $subcats->currentPage(),
+                'last_page' => $subcats->lastPage(),
+                'per_page' => $subcats->perPage(),
+                'total' => $subcats->total(),
+            ],
+        ]);
+    }
+
+    public function materials(Request $request)
+    {
+        $q = Material::query()->with(['category:id,name', 'subcategory:id,name']);
+        if ($cid = $request->query('category_id')) { $q->where('category_id', $cid); }
+        if ($sid = $request->query('subcategory_id')) { $q->where('subcategory_id', $sid); }
+        if ($search = $request->query('q')) { $q->where('title','like',"%{$search}%"); }
+
+        $materials = $q->orderByDesc('id')->paginate(20, ['id','title','slug','category_id','subcategory_id','path','url','mime','size']);
+
+        $data = collect($materials->items())->map(function ($m) {
+            // Prefer stored URL if available, fallback to Storage disk path if 'path' is set
+            $previewUrl = $m->url ?: ($m->path ? Storage::url($m->path) : null);
+            return [
+                'id' => $m->id,
+                'title' => $m->title,
+                'slug' => $m->slug,
+                'category_id' => $m->category_id,
+                'subcategory_id' => $m->subcategory_id,
+                'mime' => $m->mime,
+                'size' => $m->size,
+                'previewUrl' => $previewUrl,
+                'category' => $m->category ? ['id' => $m->category->id, 'name' => $m->category->name] : null,
+                'subcategory' => $m->subcategory ? ['id' => $m->subcategory->id, 'name' => $m->subcategory->name] : null,
+            ];
+        });
+
+        return response()->json([
+            'data' => $data,
+            'pagination' => [
+                'current_page' => $materials->currentPage(),
+                'last_page' => $materials->lastPage(),
+                'per_page' => $materials->perPage(),
+                'total' => $materials->total(),
+            ],
+        ]);
+    }
+
     public function notes(Request $request)
     {
         $q = Note::query();
@@ -102,7 +190,7 @@ class ContentController extends Controller
                 'class_id' => $n->class_id,
                 'mime_type' => $n->mime_type,
                 'file_size' => $n->file_size,
-                'previewUrl' => $url, // client should render preview only for non-premium
+                'previewUrl' => route('api.notes.preview', ['id' => $n->id]), // public inline preview
                 'canDownload' => $premium,
                 'downloadUrl' => $premium ? route('api.notes.download', ['id' => $n->id]) : null,
                 'created_at' => optional($n->created_at)->toIso8601String(),
@@ -133,11 +221,29 @@ class ContentController extends Controller
             'class_id' => $n->class_id,
             'mime_type' => $n->mime_type,
             'file_size' => $n->file_size,
-            'previewUrl' => $url,
+            'previewUrl' => route('api.notes.preview', ['id' => $n->id]),
             'canDownload' => $premium,
             'downloadUrl' => $premium ? route('api.notes.download', ['id' => $n->id]) : null,
             'created_at' => optional($n->created_at)->toIso8601String(),
         ]);
+    }
+
+    /**
+     * Public inline preview for a note file.
+     * Streams the file without requiring premium/admin.
+     */
+    public function preview(Request $request, int $id)
+    {
+        $n = Note::query()->findOrFail($id);
+        if (!$n->file_path || !Storage::exists($n->file_path)) {
+            return response()->json(['message' => 'File not found'], 404);
+        }
+        // Stream inline with original filename
+        return Storage::response(
+            $n->file_path,
+            $n->original_name,
+            ['Content-Disposition' => 'inline; filename="' . $n->original_name . '"']
+        );
     }
 
     public function download(Request $request, int $id)
@@ -151,5 +257,32 @@ class ContentController extends Controller
             return response()->json(['message' => 'File not found'], 404);
         }
         return Storage::download($n->file_path, $n->original_name);
+    }
+
+    /**
+     * Return subject(s) for a given class.
+     * - primarySubject: from school_classes.subject_id relation
+     * - extraSubjects: from pivot table school_class_subject (if any)
+     */
+    public function classSubject(Request $request, int $id)
+    {
+        $class = SchoolClass::query()
+            ->with(['subject:id,name', 'subjects:id,name'])
+            ->findOrFail($id, ['id','name','subject_id']);
+
+        $primary = $class->subject ? [
+            'id' => $class->subject->id,
+            'name' => $class->subject->name,
+        ] : null;
+
+        $extras = $class->subjects->map(function ($s) {
+            return [ 'id' => $s->id, 'name' => $s->name ];
+        })->values();
+
+        return response()->json([
+            'class' => [ 'id' => $class->id, 'name' => $class->name ],
+            'primarySubject' => $primary,
+            'extraSubjects' => $extras,
+        ]);
     }
 }

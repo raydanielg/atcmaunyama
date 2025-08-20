@@ -1,0 +1,9 @@
+﻿activity_logs          levels                 password_reset_tokens
+admin_settings         login_attempts         regions              
+cache                  login_logs             school_class_subject 
+cache_locks            maintenance_events     school_classes       
+categories             materials              sessions             
+failed_jobs            migrations             subcategories        
+feedbacks              mobile_app_settings    subjects             
+job_batches            mobile_notifications   users                
+jobs                   notes                

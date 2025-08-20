@@ -1,0 +1,178 @@
+WazaElimu API Reference (Local)
+
+Base URL
+- Web server: http://127.0.0.1:8000
+- All API endpoints are prefixed with /api unless stated otherwise.
+
+Auth & Tokens
+- Public endpoints: Most mobile content and regions endpoints.
+- Registration (Sanctum token): POST /api/auth/register returns { token }.
+  - Use token in Authorization header: Authorization: Bearer <token>
+
+Headers
+- Accept: application/json
+- Content-Type: application/json (for POST/PUT)
+- Optional premium access flag for notes download URL: X-Premium: 1 (or ?premium=1)
+
+Public Mobile Endpoints
+1) Mobile App Settings
+   - GET /api/mobile/settings
+   - Response: app config (maintenance, links, etc.)
+
+2) Regions
+   - GET /api/mobile/regions
+   - GET /api/regions (alias)
+   - Response: { regions: [{ id, name }] }
+
+3) Levels
+   - GET /api/mobile/content/levels
+   - Query: none
+   - Response: { data: [{ id, name, description, icon }] }
+   - Example: curl http://127.0.0.1:8000/api/mobile/content/levels
+
+4) Subjects
+   - GET /api/mobile/content/subjects
+   - Query: q (search)
+   - Response (paginated): { data: [...], pagination: {...} }
+   - Example: curl "http://127.0.0.1:8000/api/mobile/content/subjects?q=math"
+
+5) Classes
+   - GET /api/mobile/content/classes
+   - Query: subject_id, level_id (optional)
+   - Response (paginated): { data: [...], pagination: {...} }
+   - Example: curl "http://127.0.0.1:8000/api/mobile/content/classes?subject_id=1&level_id=1"
+
+5.1) Class -> Subject(s)
+   - GET /api/mobile/content/classes/{id}/subject
+   - Params: {id} = class id (integer)
+   - Response: { class: { id, name }, primarySubject: { id, name }|null, extraSubjects: [{ id, name } ...] }
+   - Example:
+     curl "http://127.0.0.1:8000/api/mobile/content/classes/12/subject"
+   - Notes: primarySubject comes from SchoolClass.subject_id; extraSubjects come from pivot school_class_subject
+
+6) Categories (Materials taxonomy)
+   - GET /api/mobile/content/categories
+   - Query: q (search)
+   - Response (paginated): { data: [{ id, name, icon }], pagination }
+
+7) Subcategories
+   - GET /api/mobile/content/subcategories
+   - Query: category_id, year, q (search)
+   - Response (paginated): { data: [{ id, name, category_id, year, icon, category }], pagination }
+
+8) Materials (Learning materials)
+   - GET /api/mobile/content/materials
+   - Query: category_id, subcategory_id, q (search)
+   - Response (paginated): { data: [{ id, title, slug, category_id, subcategory_id, mime, size, previewUrl, category, subcategory }], pagination }
+   - Note: previewUrl uses file storage URL if available.
+
+9) Notes (Learning notes)
+   - GET /api/mobile/content/notes
+   - Query: subject_id, level_id, class_id, q (search), premium=1 (to include downloadUrl)
+   - Response (paginated): { data: [{ id, title, subject_id, level_id, class_id, mime_type, file_size, previewUrl, canDownload, downloadUrl, created_at }], pagination }
+   - GET /api/mobile/content/notes/{id}
+   - GET /api/mobile/content/notes/{id}/preview  (PUBLIC inline preview, no auth required)
+   - GET /api/mobile/content/notes/{id}/download  (requires premium flag in request)
+   - Example (list with download links):
+     curl "http://127.0.0.1:8000/api/mobile/content/notes?premium=1"
+   - Example (preview inline):
+     curl -I "http://127.0.0.1:8000/api/mobile/content/notes/123/preview"
+
+10) Maintenance Status (Public)
+   - GET /api/mobile/maintenance
+   - Response: { enabled: boolean, message: string|null, started_at: ISO8601|null, ended_at: ISO8601|null, updated_at: ISO8601|null }
+   - Example: curl http://127.0.0.1:8000/api/mobile/maintenance
+
+Authentication Endpoints
+1) Registration (API)
+   - POST /api/auth/register
+   - Body (JSON): { name, email, password, password_confirmation, phone?, region_id?, role? }
+   - Response: 201 { message, user, token }
+   - Example (PowerShell):
+     Invoke-RestMethod -Method Post -Uri "http://127.0.0.1:8000/api/auth/register" -ContentType "application/json" -Body (@{
+       name="Test User"; email="test@example.com"; password="Password123!"; password_confirmation="Password123!"; region_id=1
+     } | ConvertTo-Json)
+
+2) Google Sign-In (Exchange)
+   - POST /api/auth/google
+   - Body (JSON): { id_token: string, name?: string, avatar?: string }
+   - Response: { token, user }
+   - Notes:
+     * Backend verifies the Google ID token against your GOOGLE_CLIENT_ID
+     * If email exists, it links and logs in; otherwise creates a new user
+   - Example (curl):
+     curl -X POST -H "Content-Type: application/json" \
+          -d '{"id_token":"<GoogleIDToken>"}' \
+          http://127.0.0.1:8000/api/auth/google
+
+3) Current Authenticated User (API)
+   - GET /api/auth/me
+   - Auth: Bearer token (Sanctum) in header
+     Authorization: Bearer <token>
+   - Response: { id, name, email, phone?, region_id?, role?, created_at, updated_at }
+   - Example (curl):
+     curl -H "Accept: application/json" -H "Authorization: Bearer <token>" http://127.0.0.1:8000/api/auth/me
+
+Admin Panel (Web, requires auth, verified, admin)
+- Base (browser): http://127.0.0.1:8000
+- Login (web): /login (Blade). Admin routes need an admin user created/assigned.
+
+Users
+- GET   /users                     (list)
+- GET   /users/{user}              (show)
+- PUT   /users/{user}/role         (update role)
+- POST  /users/{user}/ban          (ban)
+- POST  /users/{user}/unban        (unban)
+- DELETE /users/{user}             (delete)
+
+Notes
+- CRUD: /learning/notes, /learning/notes/{note} (+ create/edit/update/destroy)
+- Dependent JSON: /learning/notes-levels, /learning/notes-subjects, /learning/notes-classes
+
+Levels
+- CRUD: /learning/levels, /learning/levels/{level}
+- JSON helpers: /learning/levels/{level}/classes-json, /learning/levels/{level}/assign-classes-json
+- Sync: POST /learning/levels/{level}/classes
+- AI suggest: POST /learning/levels/ai-suggest-description
+
+Subjects
+- CRUD: /learning/subjects, /learning/subjects/{subject}
+- Suggest: /learning/subjects/suggest
+- Classes sync: GET /learning/subjects/{subject}/classes-json, POST /learning/subjects/{subject}/classes
+
+Classes
+- CRUD: /learning/classes, /learning/classes/{class}
+- Suggest: /learning/classes/suggest
+- Subjects sync: POST /learning/classes/{class}/subjects
+
+Materials (Admin)
+- Index: GET /materials
+- Categories: GET/POST/PUT/DELETE /materials/categories, suggest /materials/categories/suggest
+- Subcategories: GET/POST/PUT/DELETE /materials/subcategories, suggest /materials/subcategories/suggest
+- AJAX: GET /materials/subcategories/json
+- CRUD: POST/PUT/DELETE /materials, /materials/{material}
+- Public download by slug: GET /m/{slug}
+
+Mobile App Admin
+- Notifications: GET /mobile/notifications, POST /mobile/notifications/send
+- Update App: POST /mobile/notifications/update-app
+- Maintenance: GET /mobile/maintenance, POST /mobile/maintenance/toggle, POST /mobile/maintenance/message
+- Settings (admin): GET/POST /mobile/settings
+- API Docs (view): GET /mobile/api
+
+Profile & Settings (Authenticated)
+- Profile: GET /profile, PATCH /profile, DELETE /profile
+- Admin Profile: GET/POST /admin/profile, POST /admin/profile/password
+- App Settings: GET/POST /settings, GET /settings/backup, POST /settings/test-mail
+
+Session & Misc
+- Session driver uses database (SQLite). Ensure database/database.sqlite exists.
+- CORS enabled globally for API via config/cors.php and middleware.
+
+Testing Tips
+- Start server: php artisan serve --host=127.0.0.1 --port=8000
+- List routes: php artisan route:list -n
+- Clear caches: php artisan route:clear; php artisan config:clear; php artisan optimize:clear
+
+Version
+- PHP 8.4.x — Laravel 12.x — Sanctum ^4.0 — SQLite (local)

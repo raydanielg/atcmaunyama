@@ -7,6 +7,7 @@
 
     <title>{{ config('app.name', 'Wazaelimu') }} — Admin</title>
     <link rel="icon" type="image/x-icon" href="/favicon.ico">
+    @php($__logo = '/logo.png')
 
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="/css/custom.css">
@@ -19,7 +20,7 @@
             <div class="flex h-16 items-center justify-between">
                 <div class="flex items-center gap-3">
                     <a href="{{ route('dashboard') }}" class="flex items-center gap-2">
-                        <img src="/logo.png" alt="Wazaelimu" class="h-8 w-8">
+                        <img src="{{ $__logo }}" alt="Wazaelimu" class="h-8 w-8 rounded">
                         <span class="text-lg font-semibold text-gray-800">Wazaelimu Admin</span>
                     </a>
                 </div>

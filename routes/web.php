@@ -4,6 +4,12 @@ use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Http\Request;
 
+// Installer (disabled by default via INSTALLER_ENABLED=false)
+if (env('INSTALLER_ENABLED', false)) {
+    Route::get('/install', [\App\Http\Controllers\InstallController::class, 'index'])->name('install.index');
+    Route::post('/install', [\App\Http\Controllers\InstallController::class, 'store'])->name('install.store');
+}
+
 Route::get('/', function () {
     return redirect()->route('login');
 });
@@ -12,9 +18,19 @@ Route::get('/dashboard', function () {
     return view('dashboard');
 })->middleware(['auth', 'verified', 'admin'])->name('dashboard');
 
+// Social login (web) - Google/GitHub/Facebook (PUBLIC)
+Route::get('/oauth/{provider}/redirect', [\App\Http\Controllers\Auth\SocialLoginController::class, 'redirect'])
+    ->whereIn('provider', ['google','github','facebook'])
+    ->name('oauth.redirect');
+Route::get('/oauth/{provider}/callback', [\App\Http\Controllers\Auth\SocialLoginController::class, 'callback'])
+    ->whereIn('provider', ['google','github','facebook'])
+    ->name('oauth.callback');
+
 // Admin-only routes for sidebar sections
 Route::middleware(['auth', 'verified', 'admin'])->group(function () {
     // User Management
+    Route::get('/', [\App\Http\Controllers\HomeController::class, 'index'])->name('home');
+
     Route::get('/users', [\App\Http\Controllers\Admin\UsersController::class, 'index'])->name('users.index');
     Route::get('/users/{user}', [\App\Http\Controllers\Admin\UsersController::class, 'show'])->name('users.show');
     Route::put('/users/{user}/role', [\App\Http\Controllers\Admin\UsersController::class, 'updateRole'])->name('users.update_role');
@@ -89,7 +105,9 @@ Route::middleware(['auth', 'verified', 'admin'])->group(function () {
     // Mobile App
     Route::get('/mobile/notifications', [\App\Http\Controllers\Admin\MobileNotificationsController::class, 'index'])->name('mobile.notifications.index');
     Route::post('/mobile/notifications/send', [\App\Http\Controllers\Admin\MobileNotificationsController::class, 'send'])->name('mobile.notifications.send');
+    // Accept both POST (preferred) and GET (fallback) to avoid 405 from external callers
     Route::post('/mobile/notifications/update-app', [\App\Http\Controllers\Admin\MobileNotificationsController::class, 'updateApp'])->name('mobile.notifications.update_app');
+    Route::get('/mobile/notifications/update-app', [\App\Http\Controllers\Admin\MobileNotificationsController::class, 'updateApp']);
     Route::get('/mobile/maintenance', [\App\Http\Controllers\Admin\MaintenanceController::class, 'index'])->name('mobile.maintenance');
     Route::post('/mobile/maintenance/toggle', [\App\Http\Controllers\Admin\MaintenanceController::class, 'toggle'])->name('mobile.maintenance.toggle');
     Route::post('/mobile/maintenance/message', [\App\Http\Controllers\Admin\MaintenanceController::class, 'saveMessage'])->name('mobile.maintenance.message');

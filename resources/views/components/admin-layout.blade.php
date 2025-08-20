@@ -7,7 +7,7 @@
 
     @php($__admin = \App\Models\AdminSetting::query()->first())
     <title>{{ $__admin->site_name ?? config('app.name', 'wazaelimu') }} — Admin</title>
-    @php($__favicon = ($__admin && $__admin->favicon_path) ? Storage::url($__admin->favicon_path) : '/favicon.ico')
+    @php($__favicon = '/favicon.ico')
     <link rel="icon" type="image/x-icon" href="{{ $__favicon }}">
 
     <script src="https://cdn.tailwindcss.com"></script>
@@ -33,7 +33,7 @@
                         <svg class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M3 5h14a1 1 0 000-2H3a1 1 0 100 2zm14 4H3a1 1 0 000 2h14a1 1 0 100-2zm0 6H3a1 1 0 000 2h14a1 1 0 100-2z" clip-rule="evenodd"/></svg>
                     </button>
                     <a href="{{ route('dashboard') }}" class="hidden md:flex items-center gap-2">
-                        @php($__logo = ($__admin && $__admin->site_icon_path) ? Storage::url($__admin->site_icon_path) : '/logo.png')
+                        @php($__logo = '/logo.png')
                         <img src="{{ $__logo }}" alt="logo" class="h-8 w-8 rounded">
                         <span class="text-base font-semibold leading-none">{{ $__admin->site_name ?? 'wazaelimu' }}</span>
                     </a>
