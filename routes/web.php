@@ -11,12 +11,58 @@ if (env('INSTALLER_ENABLED', false)) {
 }
 
 Route::get('/', function () {
-    return redirect()->route('login');
+    // Public landing page
+    $siteSettings = \App\Models\AdminSetting::first();
+    // Simple visitors counter using cache
+    if (!cache()->has('visitors_count')) {
+        cache()->forever('visitors_count', 0);
+    }
+    $visitorsCount = (int) cache()->increment('visitors_count');
+    return view('home', compact('siteSettings', 'visitorsCount'));
 });
 
 Route::get('/dashboard', function () {
     return view('dashboard');
 })->middleware(['auth', 'verified', 'admin'])->name('dashboard');
+
+// Public Classes page
+Route::get('/classes', function () {
+    $siteSettings = \App\Models\AdminSetting::first();
+    $classes = \App\Models\SchoolClass::with(['subject','subjects'])
+        ->orderBy('name')
+        ->get();
+    // Pass visitors counter for consistent footer display
+    if (!cache()->has('visitors_count')) {
+        cache()->forever('visitors_count', 0);
+    }
+    $visitorsCount = (int) cache()->get('visitors_count', 0);
+    return view('classes', compact('siteSettings', 'classes', 'visitorsCount'));
+})->name('classes.index');
+
+// Public FAQ page
+Route::get('/faq', function () {
+    $siteSettings = \App\Models\AdminSetting::first();
+    if (!cache()->has('visitors_count')) {
+        cache()->forever('visitors_count', 0);
+    }
+    $visitorsCount = (int) cache()->get('visitors_count', 0);
+    return view('faq', compact('siteSettings', 'visitorsCount'));
+})->name('faq.index');
+
+// Public simple email subscription (DB-backed)
+Route::post('/subscribe', function (\Illuminate\Http\Request $request) {
+    $data = $request->validate([
+        'email' => ['required','email','max:255','unique:subscribers,email'],
+    ]);
+
+    \App\Models\Subscriber::create([
+        'email' => $data['email'],
+        'ip' => $request->ip(),
+        'user_agent' => (string) $request->header('User-Agent'),
+    ]);
+
+    return back()->with('subscribed', true);
+})->name('subscribe');
 
 // Social login (web) - Google/GitHub/Facebook (PUBLIC)
 Route::get('/oauth/{provider}/redirect', [\App\Http\Controllers\Auth\SocialLoginController::class, 'redirect'])
@@ -28,10 +74,11 @@ Route::get('/oauth/{provider}/callback', [\App\Http\Controllers\Auth\SocialLogin
 
 // Admin-only routes for sidebar sections
 Route::middleware(['auth', 'verified', 'admin'])->group(function () {
-    // User Management
-    Route::get('/', [\App\Http\Controllers\HomeController::class, 'index'])->name('home');
+    // Admin Home (dashboard landing)
+    Route::get('/admin', [\App\Http\Controllers\HomeController::class, 'index'])->name('home');
 
     Route::get('/users', [\App\Http\Controllers\Admin\UsersController::class, 'index'])->name('users.index');
+    Route::post('/users', [\App\Http\Controllers\Admin\UsersController::class, 'store'])->name('users.store');
     Route::get('/users/{user}', [\App\Http\Controllers\Admin\UsersController::class, 'show'])->name('users.show');
     Route::put('/users/{user}/role', [\App\Http\Controllers\Admin\UsersController::class, 'updateRole'])->name('users.update_role');
     Route::post('/users/{user}/ban', [\App\Http\Controllers\Admin\UsersController::class, 'ban'])->name('users.ban');
@@ -94,9 +141,16 @@ Route::middleware(['auth', 'verified', 'admin'])->group(function () {
     Route::put('/materials/subcategories/{subcategory}', [\App\Http\Controllers\Admin\SubcategoriesController::class, 'update'])->name('materials.subcategories.update');
     Route::delete('/materials/subcategories/{subcategory}', [\App\Http\Controllers\Admin\SubcategoriesController::class, 'destroy'])->name('materials.subcategories.destroy');
 
+    // Sub Sub Categories
+    Route::get('/materials/subsubcategories', [\App\Http\Controllers\Admin\SubSubcategoriesController::class, 'index'])->name('materials.subsubcategories.index');
+    Route::post('/materials/subsubcategories', [\App\Http\Controllers\Admin\SubSubcategoriesController::class, 'store'])->name('materials.subsubcategories.store');
+    Route::put('/materials/subsubcategories/{subsubcategory}', [\App\Http\Controllers\Admin\SubSubcategoriesController::class, 'update'])->name('materials.subsubcategories.update');
+    Route::delete('/materials/subsubcategories/{subsubcategory}', [\App\Http\Controllers\Admin\SubSubcategoriesController::class, 'destroy'])->name('materials.subsubcategories.destroy');
+
     // AJAX endpoints
     Route::get('/materials/suggest', [\App\Http\Controllers\Admin\MaterialsController::class, 'suggest'])->name('materials.suggest');
     Route::get('/materials/subcategories/json', [\App\Http\Controllers\Admin\MaterialsController::class, 'subcategories'])->name('materials.subcategories');
+    Route::get('/materials/subsubcategories/json', [\App\Http\Controllers\Admin\MaterialsController::class, 'subsubcategories'])->name('materials.subsubcategories');
     // Materials CRUD
     Route::post('/materials', [\App\Http\Controllers\Admin\MaterialsController::class, 'store'])->name('materials.store');
     Route::put('/materials/{material}', [\App\Http\Controllers\Admin\MaterialsController::class, 'update'])->name('materials.update');
@@ -203,3 +257,7 @@ Route::middleware('auth')->get('/welcome', function () {
 
 // Public material download by slug
 Route::get('/m/{slug}', [\App\Http\Controllers\Admin\MaterialsController::class, 'download'])->name('materials.download');
+// Public inline preview by material id
+Route::get('/materials/{material}/preview', [\App\Http\Controllers\Admin\MaterialsController::class, 'preview'])->name('materials.preview');
+// Public inline preview for notes
+Route::get('/notes/{note}/preview', [\App\Http\Controllers\Admin\NotesController::class, 'preview'])->name('notes.preview');

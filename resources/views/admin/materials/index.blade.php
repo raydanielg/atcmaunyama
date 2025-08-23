@@ -5,6 +5,29 @@
                 <h1 class="text-xl font-semibold text-gray-900">All Materials</h1>
                 <p class="text-sm text-gray-500">Search, add, and manage learning materials.</p>
             </div>
+
+    <!-- Preview Modal -->
+    <div id="previewModal" class="fixed inset-0 bg-black/40 hidden z-[70]">
+        <div class="min-h-full w-full grid place-items-center p-4">
+            <div class="bg-white rounded-lg shadow max-w-5xl w-full h-[80vh] flex flex-col">
+                <div class="px-4 py-3 border-b flex items-center justify-between">
+                    <h3 class="font-semibold">Preview</h3>
+                    <div class="flex items-center gap-2">
+                        <a id="previewOpenNew" href="#" target="_blank" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-gray-200 text-gray-700 hover:bg-gray-50 text-sm">
+                            <span class="material-symbols-outlined text-[18px]">open_in_new</span>
+                            Open in new tab
+                        </a>
+                        <button id="previewClose" class="p-1 hover:bg-gray-100 rounded" title="Close">
+                            <span class="material-symbols-outlined">close</span>
+                        </button>
+                    </div>
+                </div>
+                <div class="flex-1">
+                    <iframe id="previewFrame" src="about:blank" class="w-full h-full" frameborder="0"></iframe>
+                </div>
+            </div>
+        </div>
+    </div>
             <button id="btnOpenAddMaterial" class="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-sm shadow">
                 <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" /></svg>
                 <span>Add Material</span>
@@ -52,11 +75,20 @@
                             <td class="px-4 py-3">
                                 <div class="flex items-center justify-end gap-2">
                                     <button
+                                        class="btnPreviewMaterial inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-gray-200 text-gray-700 hover:bg-gray-50"
+                                        data-preview-url="{{ route('materials.preview', $mat) }}"
+                                        title="Preview"
+                                    >
+                                        <span class="material-symbols-outlined text-[18px]">visibility</span>
+                                        <span class="text-sm">View</span>
+                                    </button>
+                                    <button
                                         class="btnEditMaterial inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-gray-200 text-gray-700 hover:bg-gray-50"
                                         data-id="{{ $mat->id }}"
                                         data-title="{{ $mat->title }}"
                                         data-category-id="{{ $mat->category_id }}"
                                         data-subcategory-id="{{ $mat->subcategory_id }}"
+                                        data-subsub-id="{{ $mat->sub_subcategory_id }}"
                                         data-url="{{ $mat->url }}"
                                     >
                                         <span class="material-symbols-outlined text-[18px]">edit</span>
@@ -295,6 +327,13 @@
                             </select>
                         </div>
                         <div>
+                            <label class="block text-sm font-medium text-gray-700">Sub Sub Category</label>
+                            <select id="addSubsubcategoryId" name="sub_subcategory_id" class="mt-1 w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                                <option value="">Select sub sub category...</option>
+                            </select>
+                            <p class="mt-1 text-xs text-gray-500">Optional. Filters materials more precisely.</p>
+                        </div>
+                        <div>
                             <label class="block text-sm font-medium text-gray-700">URL (optional)</label>
                             <input name="url" type="url" placeholder="https://..." class="mt-1 w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" />
                         </div>
@@ -343,6 +382,12 @@
                             <label class="block text-sm font-medium text-gray-700">Subcategory</label>
                             <select id="editSubcategoryId" name="subcategory_id" required class="mt-1 w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
                                 <option value="">Select subcategory...</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Sub Sub Category</label>
+                            <select id="editSubsubcategoryId" name="sub_subcategory_id" class="mt-1 w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                                <option value="">Select sub sub category...</option>
                             </select>
                         </div>
                         <div>
@@ -451,13 +496,33 @@
             }catch(e){ targetSelect.innerHTML = '<option value="">Select subcategory...</option>'; }
         }
 
+        // Dependent sub-subcategory selects
+        async function loadSubSubs(subcategoryId, targetSelect, selectedId = null){
+            if (!targetSelect) return;
+            targetSelect.innerHTML = '<option value="">Loading...</option>';
+            try{
+                const url = new URL("{{ route('materials.subsubcategories') }}", window.location.origin);
+                url.searchParams.set('subcategory_id', subcategoryId || '');
+                const res = await fetch(url, {headers:{'X-Requested-With':'XMLHttpRequest'}});
+                const data = await res.json();
+                const options = ['<option value="">Select sub sub category...</option>']
+                    .concat(data.map(s=>`<option value="${s.id}">${s.name}</option>`));
+                targetSelect.innerHTML = options.join('');
+                if (selectedId) targetSelect.value = selectedId;
+            }catch(e){ targetSelect.innerHTML = '<option value="">Select sub sub category...</option>'; }
+        }
+
         const addCat = document.getElementById('addCategoryId');
         const addSub = document.getElementById('addSubcategoryId');
+        const addSubSub = document.getElementById('addSubsubcategoryId');
         addCat?.addEventListener('change', ()=> loadSubs(addCat.value, addSub));
+        addSub?.addEventListener('change', ()=> loadSubSubs(addSub.value, addSubSub));
 
         const editCat = document.getElementById('editCategoryId');
         const editSub = document.getElementById('editSubcategoryId');
+        const editSubSub = document.getElementById('editSubsubcategoryId');
         editCat?.addEventListener('change', ()=> loadSubs(editCat.value, editSub));
+        editSub?.addEventListener('change', ()=> loadSubSubs(editSub.value, editSubSub));
 
         // Populate edit modal
         const editForm = document.getElementById('editMaterialForm');
@@ -469,13 +534,31 @@
                 const title = btn.getAttribute('data-title');
                 const categoryId = btn.getAttribute('data-category-id') || '';
                 const subcategoryId = btn.getAttribute('data-subcategory-id') || '';
+                const subsubId = btn.getAttribute('data-subsub-id') || '';
                 const url = btn.getAttribute('data-url') || '';
                 editTitle.value = title;
                 editUrl.value = url;
                 if (editCat) editCat.value = categoryId;
                 await loadSubs(categoryId, editSub, subcategoryId);
+                await loadSubSubs(subcategoryId, editSubSub, subsubId);
                 editForm.action = `{{ url('materials') }}/${id}`;
                 open(editM);
+            });
+        });
+
+        // Preview modal
+        const pModal = document.getElementById('previewModal');
+        const pFrame = document.getElementById('previewFrame');
+        const pOpenNew = document.getElementById('previewOpenNew');
+        const pClose = document.getElementById('previewClose');
+        function openPreview(url){ if(pFrame){ pFrame.src = url; } if(pOpenNew){ pOpenNew.href = url; } open(pModal); }
+        function closePreview(){ if(pFrame){ pFrame.src = 'about:blank'; } close(pModal); }
+        pClose?.addEventListener('click', closePreview);
+        pModal?.addEventListener('click', (e)=>{ if(e.target===pModal) closePreview(); });
+        document.querySelectorAll('.btnPreviewMaterial').forEach(btn => {
+            btn.addEventListener('click', ()=>{
+                const url = btn.getAttribute('data-preview-url');
+                if (url) openPreview(url);
             });
         });
 

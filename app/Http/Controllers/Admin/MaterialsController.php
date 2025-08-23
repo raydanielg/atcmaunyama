@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Category;
 use App\Models\Material;
 use App\Models\Subcategory;
+use App\Models\SubSubcategory;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
@@ -17,7 +18,7 @@ class MaterialsController extends Controller
     {
         $q = trim((string) $request->get('q', ''));
 
-        $materials = Material::with(['category', 'subcategory'])
+        $materials = Material::with(['category', 'subcategory', 'subSubcategory'])
             ->when($q !== '', function ($query) use ($q) {
                 $query->where('title', 'like', "%$q%");
             })
@@ -36,6 +37,7 @@ class MaterialsController extends Controller
             'title' => 'required|string|max:200',
             'category_id' => 'required|exists:categories,id',
             'subcategory_id' => 'required|exists:subcategories,id',
+            'sub_subcategory_id' => 'nullable|exists:sub_subcategories,id',
             'url' => 'nullable|required_without:file|url|max:2048',
             'file' => 'nullable|required_without:url|file|mimes:pdf,doc,docx,ppt,pptx,xls,xlsx|max:25600',
         ]);
@@ -66,6 +68,7 @@ class MaterialsController extends Controller
             'title' => 'required|string|max:200',
             'category_id' => 'required|exists:categories,id',
             'subcategory_id' => 'required|exists:subcategories,id',
+            'sub_subcategory_id' => 'nullable|exists:sub_subcategories,id',
             'url' => 'nullable|required_without:file|url|max:2048',
             'file' => 'nullable|required_without:url|file|mimes:pdf,doc,docx,ppt,pptx,xls,xlsx|max:25600',
         ]);
@@ -111,10 +114,22 @@ class MaterialsController extends Controller
     public function subcategories(Request $request)
     {
         $categoryId = $request->get('category_id');
-        if (!$categoryId) return response()->json([]);
-        $subs = Subcategory::where('category_id', $categoryId)
-            ->orderBy('name')
-            ->get(['id','name']);
+        $query = Subcategory::query();
+        if ($categoryId) {
+            $query->where('category_id', $categoryId);
+        }
+        $subs = $query->orderBy('name')->get(['id','name']);
+        return response()->json($subs);
+    }
+
+    public function subsubcategories(Request $request)
+    {
+        $subcategoryId = $request->get('subcategory_id');
+        $query = SubSubcategory::query();
+        if ($subcategoryId) {
+            $query->where('subcategory_id', $subcategoryId);
+        }
+        $subs = $query->orderBy('name')->get(['id','name']);
         return response()->json($subs);
     }
 
@@ -134,5 +149,29 @@ class MaterialsController extends Controller
         $ext = pathinfo($mat->path, PATHINFO_EXTENSION);
         $downloadName = $ext ? ($filename.'.'.$ext) : $filename;
         return $disk->download($mat->path, $downloadName);
+    }
+
+    // Inline preview (for admin UI)
+    public function preview(Material $material)
+    {
+        // If we have a stored file, stream it inline
+        if ($material->path) {
+            $disk = Storage::disk('public');
+            if (!$disk->exists($material->path)) abort(404);
+
+            $filename = Str::slug(pathinfo($material->title, PATHINFO_FILENAME));
+            $ext = pathinfo($material->path, PATHINFO_EXTENSION);
+            $name = $ext ? ($filename.'.'.$ext) : $filename;
+
+            // Return as inline response to allow browser preview where supported (e.g., PDFs)
+            return $disk->response($material->path, $name);
+        }
+
+        // Fallback: if external URL is set, redirect (iframe may or may not allow embedding)
+        if ($material->url) {
+            return redirect($material->url);
+        }
+
+        abort(404);
     }
 }

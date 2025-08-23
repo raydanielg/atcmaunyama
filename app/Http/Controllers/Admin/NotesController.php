@@ -9,6 +9,8 @@ use App\Models\Subject;
 use App\Models\SchoolClass;
 use App\Support\ActivityLog;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 class NotesController extends Controller
 {
@@ -70,6 +72,20 @@ class NotesController extends Controller
     public function show(Note $note)
     {
         return view('admin.learning.notes.show', compact('note'));
+    }
+
+    // Public inline preview of uploaded note file
+    public function preview(Note $note)
+    {
+        if ($note->file_path) {
+            $disk = Storage::disk('public');
+            if (!$disk->exists($note->file_path)) abort(404);
+            $filename = Str::slug(pathinfo($note->title, PATHINFO_FILENAME));
+            $ext = pathinfo($note->file_path, PATHINFO_EXTENSION);
+            $name = $ext ? ($filename.'.'.$ext) : $filename;
+            return $disk->response($note->file_path, $name);
+        }
+        abort(404);
     }
 
     public function edit(Note $note)

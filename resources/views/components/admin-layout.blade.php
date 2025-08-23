@@ -228,6 +228,10 @@
                                     <span class="material-symbols-outlined text-[20px]">subdirectory_arrow_right</span>
                                     <span>Sub Category</span>
                                 </a>
+                                <a href="{{ route('materials.subsubcategories.index') }}" class="flex items-center gap-3 rounded-lg px-3 py-2 text-sm {{ request()->routeIs('materials.subsubcategories.*') ? 'bg-gray-100 text-gray-900' : 'text-gray-700 hover:bg-gray-50' }}">
+                                    <span class="material-symbols-outlined text-[20px]">subdirectory_arrow_right</span>
+                                    <span>Sub Sub Category</span>
+                                </a>
                             </div>
                         </div>
 

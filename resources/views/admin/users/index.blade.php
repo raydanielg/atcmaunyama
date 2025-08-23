@@ -7,12 +7,18 @@
                 <h1 class="text-xl font-semibold text-gray-900">User Management</h1>
                 <p class="text-sm text-gray-500 mt-1">View and manage users. Ban, unban, delete and inspect details.</p>
             </div>
-            <form method="GET" class="w-full max-w-xs">
-                <div class="relative">
-                    <input type="text" name="s" value="{{ $s ?? '' }}" placeholder="Search name or email..." class="w-full pl-10 pr-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" />
-                    <span class="material-symbols-outlined absolute left-2 top-1/2 -translate-y-1/2 text-gray-400">search</span>
-                </div>
-            </form>
+            <div class="flex items-center gap-3">
+                <form method="GET" class="w-full max-w-xs">
+                    <div class="relative">
+                        <input type="text" name="s" value="{{ $s ?? '' }}" placeholder="Search name or email..." class="w-full pl-10 pr-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" />
+                        <span class="material-symbols-outlined absolute left-2 top-1/2 -translate-y-1/2 text-gray-400">search</span>
+                    </div>
+                </form>
+                <button id="btnOpenAddUser" type="button" class="inline-flex items-center gap-1 px-3 py-2 rounded-lg bg-indigo-600 text-white hover:bg-indigo-700">
+                    <span class="material-symbols-outlined text-sm">person_add</span>
+                    <span class="text-sm">Add User</span>
+                </button>
+            </div>
         </div>
 
         <!-- Dashed divider under heading -->
@@ -102,4 +108,76 @@
 
         <div class="mt-4">{{ $users->links() }}</div>
     </div>
+
+    <!-- Add User Modal -->
+    <div id="addUserModal" class="fixed inset-0 bg-black/40 z-40 hidden">
+        <div class="min-h-full flex items-center justify-center p-4">
+            <div class="w-full max-w-lg bg-white rounded-xl shadow-lg overflow-hidden">
+                <div class="px-5 py-4 border-b flex items-center justify-between">
+                    <h2 class="text-lg font-semibold">Add New User</h2>
+                    <button type="button" id="btnCloseAddUser" class="text-gray-500 hover:text-gray-700">
+                        <span class="material-symbols-outlined">close</span>
+                    </button>
+                </div>
+                <form method="POST" action="{{ route('users.store') }}" class="px-5 py-4">
+                    @csrf
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm text-gray-700 mb-1">Name</label>
+                            <input name="name" type="text" class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" required />
+                        </div>
+                        <div>
+                            <label class="block text-sm text-gray-700 mb-1">Email</label>
+                            <input name="email" type="email" class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" required />
+                        </div>
+                        <div>
+                            <label class="block text-sm text-gray-700 mb-1">Role</label>
+                            <select name="role" class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" required>
+                                <option value="user">user</option>
+                                <option value="admin">admin</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm text-gray-700 mb-1">Phone (optional)</label>
+                            <input name="phone" type="text" class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" />
+                        </div>
+                        <div class="md:col-span-2">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-sm text-gray-700 mb-1">Password (optional)</label>
+                                    <input name="password" type="password" class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" />
+                                </div>
+                                <div>
+                                    <label class="block text-sm text-gray-700 mb-1">Confirm Password</label>
+                                    <input name="password_confirmation" type="password" class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" />
+                                </div>
+                            </div>
+                            <p class="text-xs text-gray-500 mt-1">If left blank, a temporary password will be generated and shown after creation.</p>
+                        </div>
+                    </div>
+
+                    <div class="mt-5 flex items-center justify-end gap-3">
+                        <button type="button" id="btnCancelAddUser" class="px-4 py-2 rounded border border-gray-300 text-gray-700 hover:bg-gray-50">Cancel</button>
+                        <button type="submit" class="px-4 py-2 rounded bg-indigo-600 text-white hover:bg-indigo-700">Create User</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        (function(){
+            const modal = document.getElementById('addUserModal');
+            const openBtn = document.getElementById('btnOpenAddUser');
+            const closeBtn = document.getElementById('btnCloseAddUser');
+            const cancelBtn = document.getElementById('btnCancelAddUser');
+            function open(){ modal.classList.remove('hidden'); }
+            function close(){ modal.classList.add('hidden'); }
+            if(openBtn) openBtn.addEventListener('click', open);
+            if(closeBtn) closeBtn.addEventListener('click', close);
+            if(cancelBtn) cancelBtn.addEventListener('click', close);
+            // Close on backdrop click
+            if(modal) modal.addEventListener('click', function(e){ if(e.target === modal) close(); });
+        })();
+    </script>
 </x-admin-layout>

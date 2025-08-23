@@ -235,11 +235,13 @@ class ContentController extends Controller
     public function preview(Request $request, int $id)
     {
         $n = Note::query()->findOrFail($id);
-        if (!$n->file_path || !Storage::exists($n->file_path)) {
+        // Files are stored on the 'public' disk by Admin NotesController::store()
+        $disk = Storage::disk('public');
+        if (!$n->file_path || !$disk->exists($n->file_path)) {
             return response()->json(['message' => 'File not found'], 404);
         }
         // Stream inline with original filename
-        return Storage::response(
+        return $disk->response(
             $n->file_path,
             $n->original_name,
             ['Content-Disposition' => 'inline; filename="' . $n->original_name . '"']
@@ -253,10 +255,12 @@ class ContentController extends Controller
             return response()->json(['message' => 'Premium required for downloads'], 403);
         }
         $n = Note::query()->findOrFail($id);
-        if (!$n->file_path || !Storage::exists($n->file_path)) {
+        // Ensure we read from the same disk where uploads are saved ('public')
+        $disk = Storage::disk('public');
+        if (!$n->file_path || !$disk->exists($n->file_path)) {
             return response()->json(['message' => 'File not found'], 404);
         }
-        return Storage::download($n->file_path, $n->original_name);
+        return $disk->download($n->file_path, $n->original_name);
     }
 
     /**

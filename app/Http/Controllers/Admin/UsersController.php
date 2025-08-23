@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Support\ActivityLog;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 
 class UsersController extends Controller
 {
@@ -25,6 +26,36 @@ class UsersController extends Controller
     public function show(User $user)
     {
         return view('admin.users.show', compact('user'));
+    }
+
+    public function store(Request $request)
+    {
+        $data = $request->validate([
+            'name' => 'required|string|max:100',
+            'email' => 'required|email:rfc,dns|unique:users,email',
+            'role' => 'required|in:admin,user',
+            'password' => 'nullable|string|min:8|confirmed',
+        ]);
+
+        // Generate a temporary password if none provided
+        $plainPassword = $data['password'] ?? Str::random(10);
+        $data['password'] = $plainPassword; // Will be hashed by User model cast
+
+        // Optional extras if present in form
+        if ($request->filled('phone')) $data['phone'] = $request->string('phone');
+        if ($request->filled('region_id')) $data['region_id'] = (int) $request->input('region_id');
+
+        $user = User::create($data);
+
+        ActivityLog::log('user.created', "Created user {$user->email} with role {$user->role}", auth()->id());
+
+        // Show the password once if it was auto-generated
+        $status = 'User created successfully.';
+        if (!$request->filled('password')) {
+            $status .= ' Temporary password: ' . $plainPassword;
+        }
+
+        return redirect()->route('users.index')->with('status', $status);
     }
 
     public function updateRole(Request $request, User $user)

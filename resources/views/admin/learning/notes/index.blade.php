@@ -48,7 +48,7 @@
                             <td class="px-4 py-3 text-sm text-gray-700">{{ $note->updated_at?->diffForHumans() }}</td>
                             <td class="px-4 py-3">
                                 <div class="flex justify-end gap-2">
-                                    <a href="{{ route('learning.notes.show', $note) }}" class="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded border text-gray-700 border-gray-300 hover:bg-gray-100 text-xs">
+                                    <a href="{{ route('notes.preview', $note) }}" target="_blank" rel="noopener" class="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded border text-gray-700 border-gray-300 hover:bg-gray-100 text-xs">
                                         <span class="material-symbols-outlined text-sm">visibility</span>
                                         <span>View</span>
                                     </a>

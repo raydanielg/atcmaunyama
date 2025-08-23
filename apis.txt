@@ -14,6 +14,14 @@ Headers
 - Content-Type: application/json (for POST/PUT)
 - Optional premium access flag for notes download URL: X-Premium: 1 (or ?premium=1)
 
+Public Web Endpoints (no auth)
+- GET /materials/{material}/preview  — Inline preview of a material file
+- GET /notes/{note}/preview         — Inline preview of a note file
+- GET /m/{slug}                     — Public material download by slug
+- GET /classes                      — Public classes listing page (HTML view)
+- GET /faq                          — Public FAQ page with Q&A accordion (HTML view)
+- POST /subscribe                   — Subscribe with email (form POST). Body: email; Effect: stores to DB table `subscribers` (unique email); Response: 302 back with flash { subscribed: true }
+
 Public Mobile Endpoints
 1) Mobile App Settings
    - GET /api/mobile/settings
@@ -150,7 +158,12 @@ Materials (Admin)
 - Categories: GET/POST/PUT/DELETE /materials/categories, suggest /materials/categories/suggest
 - Subcategories: GET/POST/PUT/DELETE /materials/subcategories, suggest /materials/subcategories/suggest
 - AJAX: GET /materials/subcategories/json
+- AJAX: GET /materials/subsubcategories/json  (query: subcategory_id)
+- Preview (inline): GET /materials/{material}/preview
+- Sub Sub Categories (page): GET /materials/subsubcategories
+- Sub Sub Categories CRUD: POST /materials/subsubcategories, PUT /materials/subsubcategories/{id}, DELETE /materials/subsubcategories/{id}
 - CRUD: POST/PUT/DELETE /materials, /materials/{material}
+  - Fields: title, category_id, subcategory_id, sub_subcategory_id?, url?, file?
 - Public download by slug: GET /m/{slug}
 
 Mobile App Admin

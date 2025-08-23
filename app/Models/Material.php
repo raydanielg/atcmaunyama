@@ -12,6 +12,7 @@ class Material extends Model
         'slug',
         'category_id',
         'subcategory_id',
+        'sub_subcategory_id',
         'path',
         'url',
         'mime',
@@ -27,6 +28,11 @@ class Material extends Model
     public function subcategory(): BelongsTo
     {
         return $this->belongsTo(Subcategory::class);
+    }
+
+    public function subSubcategory(): BelongsTo
+    {
+        return $this->belongsTo(SubSubcategory::class, 'sub_subcategory_id');
     }
 
     public function user(): BelongsTo
