@@ -244,7 +244,14 @@ class ContentController extends Controller
         return $disk->response(
             $n->file_path,
             $n->original_name,
-            ['Content-Disposition' => 'inline; filename="' . $n->original_name . '"']
+            [
+                'Content-Disposition' => 'inline; filename="' . $n->original_name . '"',
+                // Best-effort protections (cannot fully prevent downloads/screenshots)
+                'Cache-Control' => 'no-store, no-cache, must-revalidate, max-age=0',
+                'Pragma' => 'no-cache',
+                'Expires' => '0',
+                'X-Content-Type-Options' => 'nosniff',
+            ]
         );
     }
 

@@ -25,6 +25,46 @@ Route::get('/dashboard', function () {
     return view('dashboard');
 })->middleware(['auth', 'verified', 'admin'])->name('dashboard');
 
+// User Dashboard (non-admin)
+Route::middleware(['auth'])->get('/user/dashboard', function () {
+    return view('user.dashboard');
+})->name('user.dashboard');
+
+// User Classes (non-admin, inside user panel)
+Route::middleware(['auth'])->get('/user/classes', function () {
+    $siteSettings = \App\Models\AdminSetting::first();
+    $classes = \App\Models\SchoolClass::with(['subject','subjects'])
+        ->orderBy('name')
+        ->get();
+    return view('user.classes', compact('siteSettings','classes'));
+})->name('user.classes.index');
+
+// User Class details (subjects + notes/materials assigned)
+Route::middleware(['auth'])->get('/user/classes/{class}', function (\App\Models\SchoolClass $class) {
+    $siteSettings = \App\Models\AdminSetting::first();
+    $class->load(['subject','subjects']);
+    $subjects = collect([$class->subject])->filter()->merge($class->subjects ?? collect());
+    $selectedSubjectId = request()->integer('subject_id');
+    $selectedNoteId = request()->integer('note_id');
+
+    $notes = \App\Models\Note::query()
+        ->where('class_id', $class->id)
+        ->when($selectedSubjectId, function ($q) use ($selectedSubjectId) {
+            $q->where('subject_id', $selectedSubjectId);
+        })
+        ->latest('created_at')
+        ->get();
+
+    return view('user.class-show', [
+        'siteSettings' => $siteSettings,
+        'class' => $class,
+        'subjects' => $subjects,
+        'selectedSubjectId' => $selectedSubjectId,
+        'notes' => $notes,
+        'selectedNoteId' => $selectedNoteId,
+    ]);
+})->name('user.classes.show');
+
 // Public Classes page
 Route::get('/classes', function () {
     $siteSettings = \App\Models\AdminSetting::first();

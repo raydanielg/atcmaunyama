@@ -22,6 +22,11 @@ Public Web Endpoints (no auth)
 - GET /faq                          — Public FAQ page with Q&A accordion (HTML view)
 - POST /subscribe                   — Subscribe with email (form POST). Body: email; Effect: stores to DB table `subscribers` (unique email); Response: 302 back with flash { subscribed: true }
 
+Authenticated Web Endpoints (users)
+- GET /user/dashboard              — User dashboard (Blade) for normal users after login/register
+- GET /user/classes                — User classes page (Blade) with colored class cards (inside user panel)
+- GET /user/classes/{class}        — Single class details (subjects + notes/materials)
+
 Public Mobile Endpoints
 1) Mobile App Settings
    - GET /api/mobile/settings
@@ -124,6 +129,14 @@ Authentication Endpoints
 Admin Panel (Web, requires auth, verified, admin)
 - Base (browser): http://127.0.0.1:8000
 - Login (web): /login (Blade). Admin routes need an admin user created/assigned.
+
+Auth Redirects (Web)
+- After login (web):
+  - Admins -> route('dashboard') `/dashboard`
+  - Users  -> route('user.dashboard') `/user/dashboard`
+- After registration (web):
+  - Admins -> `/dashboard`
+  - Users  -> `/user/dashboard`
 
 Users
 - GET   /users                     (list)

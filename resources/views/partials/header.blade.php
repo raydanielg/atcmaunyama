@@ -45,8 +45,14 @@
             </button>
 
             <div class="hidden sm:flex items-center gap-6 text-sm">
+                @php
+                    $isAdmin = auth()->check() && auth()->user()->role === 'admin';
+                    $classesHref = $isAdmin
+                        ? (Route::has('learning.classes.index') ? route('learning.classes.index') : route('classes.index'))
+                        : (auth()->check() && Route::has('user.classes.index') ? route('user.classes.index') : route('classes.index'));
+                @endphp
                 <a href="{{ url('/') }}" class="hover:underline">Home</a>
-                <a href="{{ route('classes.index') }}" class="hover:underline">Classes</a>
+                <a href="{{ $classesHref }}" class="hover:underline">Classes</a>
                 <a href="{{ route('faq.index') }}" class="hover:underline">FAQ</a>
                 @if (Route::has('login'))
                     <a href="{{ route('login') }}" class="hover:underline">Login</a>
@@ -59,8 +65,14 @@
 
         <div id="main-nav-menu" class="sm:hidden hidden pb-3 border-t border-white/10">
             <ul class="flex flex-col gap-2 pt-3 text-sm">
+                @php
+                    $isAdmin = auth()->check() && auth()->user()->role === 'admin';
+                    $classesHref = $isAdmin
+                        ? (Route::has('learning.classes.index') ? route('learning.classes.index') : route('classes.index'))
+                        : (auth()->check() && Route::has('user.classes.index') ? route('user.classes.index') : route('classes.index'));
+                @endphp
                 <li><a href="{{ url('/') }}" class="block px-2 py-2 rounded hover:bg-white/10">Home</a></li>
-                <li><a href="{{ route('classes.index') }}" class="block px-2 py-2 rounded hover:bg-white/10">Classes</a></li>
+                <li><a href="{{ $classesHref }}" class="block px-2 py-2 rounded hover:bg-white/10">Classes</a></li>
                 <li><a href="{{ route('faq.index') }}" class="block px-2 py-2 rounded hover:bg-white/10">FAQ</a></li>
                 @if (Route::has('login'))
                     <li><a href="{{ route('login') }}" class="block px-2 py-2 rounded hover:bg-white/10">Login</a></li>
