@@ -236,17 +236,23 @@
                                 <option value="">Loading levels...</option>
                             </select>
                         </div>
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                             <div>
-                                <label class="block text-sm font-medium text-gray-700">Subject</label>
-                                <select name="subject_id" id="subjectSelect" class="mt-1 w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" disabled>
+                                <label class="block text-sm font-medium text-gray-700">Class</label>
+                                <select name="class_id" id="classSelect" class="mt-1 w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" disabled>
                                     <option value="">Select level first...</option>
                                 </select>
                             </div>
                             <div>
-                                <label class="block text-sm font-medium text-gray-700">Class</label>
-                                <select name="class_id" id="classSelect" class="mt-1 w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" disabled>
-                                    <option value="">Select subject first...</option>
+                                <label class="block text-sm font-medium text-gray-700">Semester</label>
+                                <select name="semister_id" id="semisterSelect" class="mt-1 w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" disabled>
+                                    <option value="">Select class first...</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700">Subject</label>
+                                <select name="subject_id" id="subjectSelect" class="mt-1 w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" disabled>
+                                    <option value="">Select semester first...</option>
                                 </select>
                             </div>
                         </div>
@@ -304,13 +310,14 @@
         const levelSelect = document.getElementById('levelSelect');
         const subjectSelect = document.getElementById('subjectSelect');
         const classSelect = document.getElementById('classSelect');
+        const semisterSelect = document.getElementById('semisterSelect');
         const uploadIcon = document.getElementById('uploadIcon');
         const uploadText = document.getElementById('uploadText');
 
         function openModal(){ modal.classList.remove('hidden'); }
         function closeModal(){ modal.classList.add('hidden'); resetForm(); }
         function showSuccess(){ successPopup.classList.remove('hidden'); setTimeout(()=>{ successPopup.classList.add('hidden'); }, 1600); }
-        function resetForm(){ form.reset(); progressBar.style.width = '0%'; progressBar.textContent = ' 0%'; progressWrap.classList.add('hidden'); uploadIcon.style.display='none'; uploadText.textContent='Upload'; subjectSelect.innerHTML='<option value="">Select subject...</option>'; classSelect.innerHTML='<option value="">Select class...</option>'; }
+        function resetForm(){ form.reset(); progressBar.style.width = '0%'; progressBar.textContent = ' 0%'; progressWrap.classList.add('hidden'); uploadIcon.style.display='none'; uploadText.textContent='Upload'; subjectSelect.innerHTML='<option value="">Select semester first...</option>'; classSelect.innerHTML='<option value="">Select level first...</option>'; if(semisterSelect){ semisterSelect.innerHTML='<option value="">Select class first...</option>'; semisterSelect.disabled=true; } }
 
         btnOpen?.addEventListener('click', openModal);
         btnClose?.addEventListener('click', closeModal);
@@ -341,7 +348,8 @@
             classSelect.disabled = true;
             classSelect.innerHTML = '<option value="">Loading classes...</option>';
             // Reset subjects when level changes
-            if (subjectSelect){ subjectSelect.disabled = true; subjectSelect.innerHTML = '<option value="">Select class first...</option>'; }
+            if (subjectSelect){ subjectSelect.disabled = true; subjectSelect.innerHTML = '<option value="">Select semester first...</option>'; }
+            if (semisterSelect){ semisterSelect.disabled = true; semisterSelect.innerHTML = '<option value="">Select class first...</option>'; }
             if (!levelId){
                 classSelect.innerHTML = '<option value="">Select level first...</option>';
                 return;
@@ -355,12 +363,25 @@
                 classSelect.disabled = false;
             }
         }
+        async function loadSemisters(){
+            if (!semisterSelect) return;
+            semisterSelect.disabled = true;
+            semisterSelect.innerHTML = '<option value="">Loading semesters...</option>';
+            try{
+                const data = await fetchJSON('{{ route('learning.notes.semisters') }}');
+                semisterSelect.innerHTML = '<option value="">Select semester...</option>' + data.map(s=>`<option value="${s.id}">${s.name}</option>`).join('');
+            }catch(e){
+                semisterSelect.innerHTML = '<option value="">Failed to load semesters</option>';
+            }finally{
+                semisterSelect.disabled = false;
+            }
+        }
         async function loadSubjects(classId){
             if (!subjectSelect) return;
             subjectSelect.disabled = true;
             subjectSelect.innerHTML = '<option value="">Loading subjects...</option>';
             if (!classId){
-                subjectSelect.innerHTML = '<option value="">Select class first...</option>';
+                subjectSelect.innerHTML = '<option value="">Select semester first...</option>';
                 return;
             }
             try{
@@ -374,12 +395,14 @@
         }
 
         levelSelect?.addEventListener('change', ()=> loadClasses(levelSelect.value));
-        classSelect?.addEventListener('change', ()=> loadSubjects(classSelect.value));
+        classSelect?.addEventListener('change', ()=> { loadSemisters(); subjectSelect.disabled = true; subjectSelect.innerHTML = '<option value="">Select semester first...</option>'; });
+        semisterSelect?.addEventListener('change', ()=> loadSubjects(classSelect.value));
 
         // Initialize levels when modal opens and reset dependent selects
         btnOpen?.addEventListener('click', ()=>{
             if (classSelect){ classSelect.disabled = true; classSelect.innerHTML = '<option value="">Select level first...</option>'; }
-            if (subjectSelect){ subjectSelect.disabled = true; subjectSelect.innerHTML = '<option value="">Select class first...</option>'; }
+            if (semisterSelect){ semisterSelect.disabled = true; semisterSelect.innerHTML = '<option value="">Select class first...</option>'; }
+            if (subjectSelect){ subjectSelect.disabled = true; subjectSelect.innerHTML = '<option value="">Select semester first...</option>'; }
             loadLevels();
         });
 
