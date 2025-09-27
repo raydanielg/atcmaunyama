@@ -229,9 +229,19 @@
                                     <span>Material Sub Type</span>
                                 </a>
                             </div>
+                        <!-- Academic -->
+                        <div>
+                            <button type="button" class="w-full flex items-center justify-between px-3 py-2 rounded-lg hover:bg-gray-50" onclick="window.__toggleSection('academic')">
+                                <span class="text-xs font-semibold text-gray-600 uppercase tracking-wide">Academic</span>
+                                <svg id="caret-academic" class="h-4 w-4 text-gray-400 transition-transform" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.17l3.71-3.94a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clip-rule="evenodd"/></svg>
+                            </button>
+                            <div id="section-academic" class="mt-1 space-y-1">
+                                <a href="{{ route('admin.semisters.index') }}" class="flex items-center gap-3 rounded-lg px-3 py-2 text-sm {{ request()->routeIs('admin.semisters.*') ? 'bg-gray-100 text-gray-900' : 'text-gray-700 hover:bg-gray-50' }}">
+                                    <span class="material-symbols-outlined text-[20px]">calendar_month</span>
+                                    <span>Semesters</span>
+                                </a>
+                            </div>
                         </div>
-
-                        <!-- Mobile App -->
                         <div>
                             <button type="button" class="w-full flex items-center justify-between px-3 py-2 rounded-lg hover:bg-gray-50" onclick="window.__toggleSection('mobile')">
                                 <span class="text-xs font-semibold text-gray-600 uppercase tracking-wide">Mobile App</span>
@@ -393,7 +403,7 @@ document.addEventListener('keydown', function(e){
 // Sidebar section toggles with persistence
 ;(function(){
   const key = 'waza_sidebar_sections_v1';
-  const defaults = { um: true, learn: true, materials: true, mobile: true, cms: true, settings: true };
+  const defaults = { um: true, learn: true, materials: true, academic: true, mobile: true, cms: true, settings: true };
   function load(){
     try { return { ...defaults, ...(JSON.parse(localStorage.getItem(key) || '{}')||{}) }; } catch { return { ...defaults }; }
   }

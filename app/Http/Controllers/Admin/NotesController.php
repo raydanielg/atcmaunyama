@@ -5,12 +5,9 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Note;
 use App\Models\Level;
+use App\Models\Semister;
 use App\Models\Subject;
 use App\Models\SchoolClass;
-use App\Support\ActivityLog;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Str;
 
 class NotesController extends Controller
 {
@@ -37,6 +34,7 @@ class NotesController extends Controller
             'level_id' => ['nullable','integer'],
             'subject_id' => ['nullable','integer'],
             'class_id' => ['nullable','integer'],
+            'semister_id' => ['nullable','integer'],
             'file' => ['nullable','file','mimes:pdf,doc,docx,ppt,pptx,txt','max:20480'],
         ]);
 
@@ -56,6 +54,7 @@ class NotesController extends Controller
             'level_id' => $data['level_id'] ?? null,
             'subject_id' => $data['subject_id'] ?? null,
             'class_id' => $data['class_id'] ?? null,
+            'semister_id' => $data['semister_id'] ?? null,
             'file_path' => $filePath,
             'original_name' => $original,
             'mime_type' => $mime,
@@ -141,16 +140,9 @@ class NotesController extends Controller
         return response()->json($subjects);
     }
 
-    public function classes(Request $request)
+    public function semisters(Request $request)
     {
-        // Fetch classes filtered by selected level
-        $levelId = (int) $request->get('level_id');
-        if (!$levelId) {
-            return response()->json([]);
-        }
-        $classes = SchoolClass::where('level_id', $levelId)
-            ->orderBy('name')
-            ->get(['id','name']);
-        return response()->json($classes);
+        $semisters = Semister::active()->orderBy('start_date', 'desc')->get(['id', 'name']);
+        return response()->json($semisters);
     }
 }

@@ -20,9 +20,9 @@ class DatabaseSeeder extends Seeder
 
         // Sample users for roles: user, admin, super_admin
         User::updateOrCreate(
-            ['email' => 'admin@wazaelimu.tld'],
+            ['email' => 'admin@elms-atc.tld'],
             [
-                'name' => 'Wazaelimu Admin',
+                'name' => 'ELMS-ATC Admin',
                 'role' => 'admin',
                 'password' => Hash::make('Admin@12345'),
                 'email_verified_at' => now(),
@@ -30,9 +30,9 @@ class DatabaseSeeder extends Seeder
         );
 
         User::updateOrCreate(
-            ['email' => 'user@wazaelimu.tld'],
+            ['email' => 'user@elms-atc.tld'],
             [
-                'name' => 'Wazaelimu User',
+                'name' => 'ELMS-ATC User',
                 'role' => 'user',
                 'password' => Hash::make('User@12345'),
                 'email_verified_at' => now(),
@@ -40,9 +40,9 @@ class DatabaseSeeder extends Seeder
         );
 
         User::updateOrCreate(
-            ['email' => 'super@wazaelimu.tld'],
+            ['email' => 'super@elms-atc.tld'],
             [
-                'name' => 'Wazaelimu Super Admin',
+                'name' => 'ELMS-ATC Super Admin',
                 'role' => 'super_admin',
                 'password' => Hash::make('Super@12345'),
                 'email_verified_at' => now(),

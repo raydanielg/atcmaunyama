@@ -143,7 +143,7 @@ Route::middleware(['auth', 'verified', 'admin'])->group(function () {
     // JSON endpoints for dependent selects
     Route::get('/learning/notes-levels', [\App\Http\Controllers\Admin\NotesController::class, 'levels'])->name('learning.notes.levels');
     Route::get('/learning/notes-subjects', [\App\Http\Controllers\Admin\NotesController::class, 'subjects'])->name('learning.notes.subjects');
-    Route::get('/learning/notes-classes', [\App\Http\Controllers\Admin\NotesController::class, 'classes'])->name('learning.notes.classes');
+    Route::get('/learning/notes-semisters', [\App\Http\Controllers\Admin\NotesController::class, 'semisters'])->name('learning.notes.semisters');
     Route::get('/learning/levels', [\App\Http\Controllers\Admin\LevelsController::class, 'index'])->name('learning.levels.index');
     Route::post('/learning/levels', [\App\Http\Controllers\Admin\LevelsController::class, 'store'])->name('learning.levels.store');
     Route::put('/learning/levels/{level}', [\App\Http\Controllers\Admin\LevelsController::class, 'update'])->name('learning.levels.update');
@@ -222,10 +222,15 @@ Route::middleware(['auth', 'verified', 'admin'])->group(function () {
     Route::get('/settings/backup', [\App\Http\Controllers\Admin\AdminSettingsController::class, 'backup'])->name('settings.backup');
     Route::post('/settings/test-mail', [\App\Http\Controllers\Admin\AdminSettingsController::class, 'testMail'])->name('settings.test_mail');
 
-    // Admin Profile
-    Route::get('/admin/profile', [\App\Http\Controllers\Admin\AdminProfileController::class, 'index'])->name('admin.profile.index');
-    Route::post('/admin/profile', [\App\Http\Controllers\Admin\AdminProfileController::class, 'update'])->name('admin.profile.update');
-    Route::post('/admin/profile/password', [\App\Http\Controllers\Admin\AdminProfileController::class, 'updatePassword'])->name('admin.profile.password');
+    // Semesters
+    Route::get('/semesters', [\App\Http\Controllers\Admin\SemisterController::class, 'index'])->name('admin.semisters.index');
+    Route::get('/semesters/create', [\App\Http\Controllers\Admin\SemisterController::class, 'create'])->name('admin.semisters.create');
+    Route::post('/semesters', [\App\Http\Controllers\Admin\SemisterController::class, 'store'])->name('admin.semisters.store');
+    Route::get('/semesters/{semister}', [\App\Http\Controllers\Admin\SemisterController::class, 'show'])->name('admin.semisters.show');
+    Route::get('/semesters/{semister}/edit', [\App\Http\Controllers\Admin\SemisterController::class, 'edit'])->name('admin.semisters.edit');
+    Route::put('/semesters/{semister}', [\App\Http\Controllers\Admin\SemisterController::class, 'update'])->name('admin.semisters.update');
+    Route::delete('/semesters/{semister}', [\App\Http\Controllers\Admin\SemisterController::class, 'destroy'])->name('admin.semisters.destroy');
+    Route::patch('/semesters/{semister}/toggle-status', [\App\Http\Controllers\Admin\SemisterController::class, 'toggleStatus'])->name('admin.semisters.toggle_status');
 
     
 
@@ -252,10 +257,13 @@ Route::middleware(['auth', 'verified', 'admin'])->group(function () {
             ['title' => 'Subjects', 'section' => 'Learning', 'url' => route('learning.subjects.index')],
             ['title' => 'Classes', 'section' => 'Learning', 'url' => route('learning.classes.index')],
 
-            // Materials
+            // Learning Materials
             ['title' => 'All Materials', 'section' => 'Learning Materials', 'url' => route('materials.index')],
             ['title' => 'Material Type', 'section' => 'Learning Materials', 'url' => route('materials.subcategories.index')],
             ['title' => 'Material Sub Type', 'section' => 'Learning Materials', 'url' => route('materials.subsubcategories.index')],
+
+            // Semesters
+            ['title' => 'Semesters', 'section' => 'Academic', 'url' => route('admin.semisters.index')],
 
             // Mobile App
             ['title' => 'Notifications', 'section' => 'Mobile App', 'url' => route('mobile.notifications.index')],

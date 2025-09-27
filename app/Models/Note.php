@@ -14,6 +14,7 @@ class Note extends Model
         'subject_id',
         'level_id',
         'class_id',
+        'semister_id',
         'file_path',
         'original_name',
         'mime_type',
@@ -25,8 +26,8 @@ class Note extends Model
         'updated_at' => 'datetime',
     ];
 
-    public function user(): BelongsTo
+    public function semister(): BelongsTo
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(Semister::class);
     }
 }
