@@ -52,9 +52,8 @@
             <table class="w-full text-left">
                 <thead class="bg-gray-50 text-gray-700">
                     <tr class="text-sm">
-                        <th class="px-4 py-3 font-medium">Title</th>
-                        <th class="px-4 py-3 font-medium">Category</th>
-                        <th class="px-4 py-3 font-medium">Subcategory</th>
+                        <th class="px-4 py-3 font-medium w-20">ID</th>
+                        <th class="px-4 py-3 font-medium">Name</th>
                         <th class="px-4 py-3 font-medium">URL</th>
                         <th class="px-4 py-3 font-medium text-right">Actions</th>
                     </tr>
@@ -62,15 +61,14 @@
                 <tbody class="divide-y divide-gray-100">
                     @forelse(($materials ?? []) as $mat)
                         <tr class="text-sm">
+                            <td class="px-4 py-3 text-gray-700">#{{ $mat->id }}</td>
                             <td class="px-4 py-3 text-gray-900">{{ $mat->title }}</td>
-                            <td class="px-4 py-3 text-gray-700">{{ $mat->category->name ?? '-' }}</td>
-                            <td class="px-4 py-3 text-gray-700">{{ $mat->subcategory->name ?? '-' }}</td>
                             <td class="px-4 py-3">
-                                @if($mat->url)
-                                    <a href="{{ $mat->url }}" target="_blank" class="text-indigo-600 hover:underline">Open</a>
-                                @else
-                                    <span class="text-gray-400">—</span>
-                                @endif
+                                @php
+                                    $internal = $mat->slug ? route('materials.download', ['slug' => $mat->slug]) : route('materials.preview', $mat);
+                                    $short = Str::limit($internal, 48);
+                                @endphp
+                                <a href="{{ $internal }}" target="_blank" class="text-indigo-600 hover:underline" title="{{ $internal }}">{{ $short }}</a>
                             </td>
                             <td class="px-4 py-3">
                                 <div class="flex items-center justify-end gap-2">
@@ -86,9 +84,11 @@
                                         class="btnEditMaterial inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-gray-200 text-gray-700 hover:bg-gray-50"
                                         data-id="{{ $mat->id }}"
                                         data-title="{{ $mat->title }}"
-                                        data-category-id="{{ $mat->category_id }}"
                                         data-subcategory-id="{{ $mat->subcategory_id }}"
-                                        data-subsub-id="{{ $mat->sub_subcategory_id }}"
+                                        data-sub-subcategory-id="{{ $mat->sub_subcategory_id ?? '' }}"
+                                        data-level-id="{{ $mat->level_id }}"
+                                        data-subject-id="{{ $mat->subject_id }}"
+                                        data-class-id="{{ $mat->class_id }}"
                                         data-url="{{ $mat->url }}"
                                     >
                                         <span class="material-symbols-outlined text-[18px]">edit</span>
@@ -295,12 +295,12 @@
     </div>
 
     <!-- Add Material Modal -->
-    <div id="addMaterialModal" class="fixed inset-0 bg-black/30 hidden z-50">
-        <div class="min-h-full w-full grid place-items-center p-4">
-            <div class="bg-white rounded-lg shadow max-w-lg w-full">
-                <div class="px-4 py-3 border-b flex items-center justify-between">
-                    <h3 class="font-semibold">Add Material</h3>
-                    <button id="btnCloseAddMaterial" class="p-1 hover:bg-gray-100 rounded">
+    <div id="addMaterialModal" class="fixed inset-0 bg-black/40 hidden z-40">
+        <div class="min-h-full flex items-center justify-center p-4">
+            <div class="w-full max-w-2xl bg-white rounded-xl shadow-lg overflow-hidden">
+                <div class="flex items-center justify-between px-4 py-3 border-b">
+                    <h3 class="text-lg font-semibold">Add Material</h3>
+                    <button type="button" id="btnCloseAddMaterial" class="p-1 rounded hover:bg-gray-100">
                         <span class="material-symbols-outlined">close</span>
                     </button>
                 </div>
@@ -312,33 +312,43 @@
                             <input name="title" required class="mt-1 w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" />
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-700">Category</label>
-                            <select id="addCategoryId" name="category_id" required class="mt-1 w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
-                                <option value="">Select category...</option>
-                                @foreach(($categories ?? []) as $cat)
-                                    <option value="{{ $cat->id }}">{{ $cat->name }}</option>
-                                @endforeach
-                            </select>
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700">Subcategory</label>
+                            <label class="block text-sm font-medium text-gray-700">Material Type</label>
                             <select id="addSubcategoryId" name="subcategory_id" required class="mt-1 w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
-                                <option value="">Select subcategory...</option>
+                                <option value="">Select material type...</option>
                             </select>
                         </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700">Sub Sub Category</label>
-                            <select id="addSubsubcategoryId" name="sub_subcategory_id" class="mt-1 w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
-                                <option value="">Select sub sub category...</option>
+                        <div id="addSubTypeGroup" class="hidden">
+                            <label class="block text-sm font-medium text-gray-700">Material Sub Type (optional)</label>
+                            <select id="addSubSubcategoryId" name="sub_subcategory_id" class="mt-1 w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                                <option value="">Select sub type...</option>
                             </select>
-                            <p class="mt-1 text-xs text-gray-500">Optional. Filters materials more precisely.</p>
+                            <p class="text-xs text-gray-500 mt-1">This appears only for types that have sub types.</p>
+                            @error('sub_subcategory_id')
+                                <p class="text-xs text-red-600 mt-1">{{ $message }}</p>
+                            @enderror
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-700">URL (optional)</label>
-                            <input name="url" type="url" placeholder="https://..." class="mt-1 w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" />
+                            <label class="block text-sm font-medium text-gray-700">Education Level<span class="text-red-500"> *</span></label>
+                            <select id="addLevelId" name="level_id" required class="mt-1 w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                                <option value="">Loading levels...</option>
+                            </select>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700">Class<span class="text-red-500"> *</span></label>
+                                <select id="addClassId" name="class_id" required class="mt-1 w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" disabled>
+                                    <option value="">Loading classes...</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700">Subject<span class="text-red-500"> *</span></label>
+                                <select id="addSubjectId" name="subject_id" required class="mt-1 w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" disabled>
+                                    <option value="">Select class first...</option>
+                                </select>
+                            </div>
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-700">File (optional)</label>
+                            <label class="block text-sm font-medium text-gray-700">File<span class="text-red-500"> *</span></label>
                             <input name="file" type="file" accept=".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx" class="mt-1 w-full text-sm" />
                             <p class="mt-1 text-xs text-gray-500">Accepted: PDF, Word, PowerPoint, Excel (max 25MB). If you upload a file, the URL will be auto-filled.</p>
                         </div>
@@ -371,28 +381,39 @@
                             <input id="editTitle" name="title" required class="mt-1 w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" />
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-700">Category</label>
-                            <select id="editCategoryId" name="category_id" required class="mt-1 w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
-                                @foreach(($categories ?? []) as $cat)
-                                    <option value="{{ $cat->id }}">{{ $cat->name }}</option>
-                                @endforeach
-                            </select>
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700">Subcategory</label>
+                            <label class="block text-sm font-medium text-gray-700">Material Type</label>
                             <select id="editSubcategoryId" name="subcategory_id" required class="mt-1 w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
-                                <option value="">Select subcategory...</option>
+                                <option value="">Select material type...</option>
                             </select>
                         </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700">Sub Sub Category</label>
-                            <select id="editSubsubcategoryId" name="sub_subcategory_id" class="mt-1 w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
-                                <option value="">Select sub sub category...</option>
+                        <div id="editSubTypeGroup" class="hidden">
+                            <label class="block text-sm font-medium text-gray-700">Material Sub Type (optional)</label>
+                            <select id="editSubSubcategoryId" name="sub_subcategory_id" class="mt-1 w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                                <option value="">Select sub type...</option>
                             </select>
+                            @error('sub_subcategory_id')
+                                <p class="text-xs text-red-600 mt-1">{{ $message }}</p>
+                            @enderror
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-700">URL (optional)</label>
-                            <input id="editUrl" name="url" type="url" placeholder="https://..." class="mt-1 w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" />
+                            <label class="block text-sm font-medium text-gray-700">Education Level<span class="text-red-500"> *</span></label>
+                            <select id="editLevelId" name="level_id" required class="mt-1 w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                                <option value="">Loading levels...</option>
+                            </select>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700">Class<span class="text-red-500"> *</span></label>
+                                <select id="editClassId" name="class_id" required class="mt-1 w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" disabled>
+                                    <option value="">Loading classes...</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700">Subject<span class="text-red-500"> *</span></label>
+                                <select id="editSubjectId" name="subject_id" required class="mt-1 w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" disabled>
+                                    <option value="">Select class first...</option>
+                                </select>
+                            </div>
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700">Replace File (optional)</label>
@@ -480,13 +501,12 @@
         btnCancelEdit?.addEventListener('click', ()=> close(editM));
         editM?.addEventListener('click', (e)=>{ if(e.target===editM) close(editM); });
 
-        // Dependent subcategory selects
-        async function loadSubs(categoryId, targetSelect, selectedId = null){
+        // Load all material types (no level/subject dependency)
+        async function loadSubs(_unused, targetSelect, selectedId = null){
             if (!targetSelect) return;
             targetSelect.innerHTML = '<option value="">Loading...</option>';
             try{
                 const url = new URL("{{ route('materials.subcategories') }}", window.location.origin);
-                url.searchParams.set('category_id', categoryId || '');
                 const res = await fetch(url, {headers:{'X-Requested-With':'XMLHttpRequest'}});
                 const data = await res.json();
                 const options = ['<option value="">Select subcategory...</option>']
@@ -495,34 +515,128 @@
                 if (selectedId) targetSelect.value = selectedId;
             }catch(e){ targetSelect.innerHTML = '<option value="">Select subcategory...</option>'; }
         }
+        const addSub = document.getElementById('addSubcategoryId');
+        const addSubTypeGroup = document.getElementById('addSubTypeGroup');
+        const addSubSub = document.getElementById('addSubSubcategoryId');
+        const addSubject = document.getElementById('addSubjectId');
+        const addClass = document.getElementById('addClassId');
+        const addLevel = document.getElementById('addLevelId');
+        // Populate types when opening Add modal
+        document.getElementById('btnOpenAddMaterial')?.addEventListener('click', ()=> loadSubs(null, addSub));
+        document.getElementById('btnOpenAddMaterialEmpty')?.addEventListener('click', ()=> loadSubs(null, addSub));
 
-        // Dependent sub-subcategory selects
-        async function loadSubSubs(subcategoryId, targetSelect, selectedId = null){
-            if (!targetSelect) return;
+        const editSub = document.getElementById('editSubcategoryId');
+        const editSubTypeGroup = document.getElementById('editSubTypeGroup');
+        const editSubSub = document.getElementById('editSubSubcategoryId');
+        const editSubject = document.getElementById('editSubjectId');
+        const editClass = document.getElementById('editClassId');
+        const editLevel = document.getElementById('editLevelId');
+
+        // Load sub types for a given material type
+        async function loadSubTypes(targetSelect, groupEl, subcategoryId, selectedId = null){
+            if (!targetSelect || !groupEl) return;
             targetSelect.innerHTML = '<option value="">Loading...</option>';
+            groupEl.classList.add('hidden');
+            try { targetSelect.required = false; } catch {}
+            if (!subcategoryId){
+                targetSelect.innerHTML = '<option value="">Select sub type...</option>';
+                return;
+            }
             try{
-                const url = new URL("{{ route('materials.subsubcategories') }}", window.location.origin);
-                url.searchParams.set('subcategory_id', subcategoryId || '');
-                const res = await fetch(url, {headers:{'X-Requested-With':'XMLHttpRequest'}});
+                const url = new URL("{{ route('materials.subsubcategories.by_type') }}", window.location.origin);
+                url.searchParams.set('subcategory_id', String(subcategoryId));
+                const res = await fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } });
                 const data = await res.json();
-                const options = ['<option value="">Select sub sub category...</option>']
-                    .concat(data.map(s=>`<option value="${s.id}">${s.name}</option>`));
-                targetSelect.innerHTML = options.join('');
-                if (selectedId) targetSelect.value = selectedId;
-            }catch(e){ targetSelect.innerHTML = '<option value="">Select sub sub category...</option>'; }
+                if (Array.isArray(data) && data.length > 0){
+                    const opts = ['<option value="">Select sub type...</option>'].concat(data.map(s=>`<option value="${s.id}">${s.name}</option>`));
+                    targetSelect.innerHTML = opts.join('');
+                    if (selectedId) targetSelect.value = String(selectedId);
+                    groupEl.classList.remove('hidden');
+                    // Mark as required and update label text when available
+                    try { targetSelect.required = true; } catch {}
+                    const lbl = groupEl.querySelector('label');
+                    if (lbl) lbl.textContent = 'Material Sub Type (required)';
+                } else {
+                    targetSelect.innerHTML = '<option value="">No sub types</option>';
+                    groupEl.classList.add('hidden');
+                    try { targetSelect.required = false; } catch {}
+                    const lbl = groupEl.querySelector('label');
+                    if (lbl) lbl.textContent = 'Material Sub Type (optional)';
+                }
+            }catch(e){
+                targetSelect.innerHTML = '<option value="">Failed to load</option>';
+                groupEl.classList.add('hidden');
+                try { targetSelect.required = false; } catch {}
+                const lbl = groupEl.querySelector('label');
+                if (lbl) lbl.textContent = 'Material Sub Type (optional)';
+            }
         }
 
-        const addCat = document.getElementById('addCategoryId');
-        const addSub = document.getElementById('addSubcategoryId');
-        const addSubSub = document.getElementById('addSubsubcategoryId');
-        addCat?.addEventListener('change', ()=> loadSubs(addCat.value, addSub));
-        addSub?.addEventListener('change', ()=> loadSubSubs(addSub.value, addSubSub));
+        // Learning data loaders: Levels -> Classes(by level) -> Subjects(by class)
+        async function fetchJSON(url){ const r = await fetch(url, { headers: { 'Accept':'application/json' }}); if(!r.ok) throw new Error('HTTP '+r.status); return r.json(); }
+        async function loadLevels(target, selected=null){
+            if (!target) return; target.disabled = true; target.innerHTML = '<option value="">Loading levels...</option>';
+            try{
+                const data = await fetchJSON(`{{ route('learning.notes.levels') }}`);
+                target.innerHTML = '<option value="">Select level...</option>' + (Array.isArray(data)?data:[]).map(l=>`<option value="${l.id}">${l.name}</option>`).join('');
+                if (selected) target.value = String(selected);
+            }catch{ target.innerHTML = '<option value="">Failed to load levels</option>'; }
+            finally{ target.disabled = false; }
+        }
+        async function loadClasses(target, levelId, selected=null){
+            if (!target) return; target.disabled = true; target.innerHTML = '<option value="">Loading classes...</option>';
+            if (!levelId){ target.innerHTML = '<option value="">Select level first...</option>'; return; }
+            try{
+                const data = await fetchJSON(`{{ route('learning.notes.classes') }}?level_id=${encodeURIComponent(levelId)}`);
+                target.innerHTML = '<option value="">Select class...</option>' + (Array.isArray(data)?data:[]).map(c=>`<option value="${c.id}">${c.name}</option>`).join('');
+                if (selected) target.value = String(selected);
+            }catch{ target.innerHTML = '<option value="">Failed to load classes</option>'; }
+            finally{ target.disabled = false; }
+        }
+        async function loadSubjects(target, classId, selected=null){
+            if (!target) return; target.disabled = true; target.innerHTML = '<option value="">Loading subjects...</option>';
+            if (!classId){ target.innerHTML = '<option value="">Select class first...</option>'; return; }
+            try{
+                const data = await fetchJSON(`{{ route('learning.notes.subjects') }}?class_id=${encodeURIComponent(classId)}`);
+                target.innerHTML = '<option value="">Select subject...</option>' + (Array.isArray(data)?data:[]).map(s=>`<option value="${s.id}">${s.name}</option>`).join('');
+                if (selected) target.value = String(selected);
+            }catch{ target.innerHTML = '<option value="">Failed to load subjects</option>'; }
+            finally{ target.disabled = false; }
+        }
 
-        const editCat = document.getElementById('editCategoryId');
-        const editSub = document.getElementById('editSubcategoryId');
-        const editSubSub = document.getElementById('editSubsubcategoryId');
-        editCat?.addEventListener('change', ()=> loadSubs(editCat.value, editSub));
-        editSub?.addEventListener('change', ()=> loadSubSubs(editSub.value, editSubSub));
+        // React to Level change to filter subjects and classes
+        // React to Material Type change to fetch sub types (Add)
+        addSub?.addEventListener('change', ()=>{
+            const sid = addSub.value || '';
+            // Clear existing selection
+            if (addSubSub) addSubSub.value = '';
+            loadSubTypes(addSubSub, addSubTypeGroup, sid, null);
+        });
+        // React to Material Type change (Edit)
+        editSub?.addEventListener('change', ()=>{
+            const sid = editSub.value || '';
+            if (editSubSub) editSubSub.value = '';
+            loadSubTypes(editSubSub, editSubTypeGroup, sid, null);
+        });
+
+        addLevel?.addEventListener('change', ()=>{
+            const lvl = addLevel.value || '';
+            loadClasses(addClass, lvl, null);
+            addSubject.innerHTML = '<option value="">Select class first...</option>';
+            addSubject.disabled = true;
+        });
+        editLevel?.addEventListener('change', ()=>{
+            const lvl = editLevel.value || '';
+            loadClasses(editClass, lvl, null);
+            editSubject.innerHTML = '<option value="">Select class first...</option>';
+            editSubject.disabled = true;
+        });
+        addClass?.addEventListener('change', ()=>{
+            loadSubjects(addSubject, addClass.value || '', null);
+        });
+        editClass?.addEventListener('change', ()=>{
+            loadSubjects(editSubject, editClass.value || '', null);
+        });
 
         // Populate edit modal
         const editForm = document.getElementById('editMaterialForm');
@@ -532,18 +646,41 @@
             btn.addEventListener('click', async ()=>{
                 const id = btn.getAttribute('data-id');
                 const title = btn.getAttribute('data-title');
-                const categoryId = btn.getAttribute('data-category-id') || '';
                 const subcategoryId = btn.getAttribute('data-subcategory-id') || '';
-                const subsubId = btn.getAttribute('data-subsub-id') || '';
-                const url = btn.getAttribute('data-url') || '';
+                const subSubId = btn.getAttribute('data-sub-subcategory-id') || '';
+                const subjectId = btn.getAttribute('data-subject-id') || '';
+                const classId = btn.getAttribute('data-class-id') || '';
+                const levelId = btn.getAttribute('data-level-id') || '';
                 editTitle.value = title;
-                editUrl.value = url;
-                if (editCat) editCat.value = categoryId;
-                await loadSubs(categoryId, editSub, subcategoryId);
-                await loadSubSubs(subcategoryId, editSubSub, subsubId);
+                await loadSubs(null, editSub, subcategoryId);
+                await loadSubTypes(editSubSub, editSubTypeGroup, subcategoryId, subSubId);
+                await loadLevels(editLevel, levelId);
+                await loadClasses(editClass, levelId || editLevel.value, classId);
+                await loadSubjects(editSubject, classId || editClass.value, subjectId);
                 editForm.action = `{{ url('materials') }}/${id}`;
                 open(editM);
             });
+        });
+
+        // When opening Add modal, preload level/subject/class lists
+        document.getElementById('btnOpenAddMaterial')?.addEventListener('click', async ()=>{
+            if (addLevel) { addLevel.disabled = true; addLevel.innerHTML = '<option value="">Loading levels...</option>'; }
+            if (addClass) { addClass.disabled = true; addClass.innerHTML = '<option value="">Select level first...</option>'; }
+            if (addSubject) { addSubject.disabled = true; addSubject.innerHTML = '<option value="">Select class first...</option>'; }
+            await loadLevels(addLevel, null);
+            // Reset sub type group for add modal
+            if (addSubTypeGroup) addSubTypeGroup.classList.add('hidden');
+            if (addSubSub) { addSubSub.innerHTML = '<option value="">Select sub type...</option>'; try { addSubSub.required = false; } catch {} }
+            const lbl = addSubTypeGroup?.querySelector('label'); if (lbl) lbl.textContent = 'Material Sub Type (optional)';
+        });
+        document.getElementById('btnOpenAddMaterialEmpty')?.addEventListener('click', async ()=>{
+            if (addLevel) { addLevel.disabled = true; addLevel.innerHTML = '<option value="">Loading levels...</option>'; }
+            if (addClass) { addClass.disabled = true; addClass.innerHTML = '<option value="">Select level first...</option>'; }
+            if (addSubject) { addSubject.disabled = true; addSubject.innerHTML = '<option value="">Select class first...</option>'; }
+            await loadLevels(addLevel, null);
+            if (addSubTypeGroup) addSubTypeGroup.classList.add('hidden');
+            if (addSubSub) { addSubSub.innerHTML = '<option value=\"\">Select sub type...</option>'; try { addSubSub.required = false; } catch {} }
+            const lbl2 = addSubTypeGroup?.querySelector('label'); if (lbl2) lbl2.textContent = 'Material Sub Type (optional)';
         });
 
         // Preview modal
@@ -554,6 +691,30 @@
         function openPreview(url){ if(pFrame){ pFrame.src = url; } if(pOpenNew){ pOpenNew.href = url; } open(pModal); }
         function closePreview(){ if(pFrame){ pFrame.src = 'about:blank'; } close(pModal); }
         pClose?.addEventListener('click', closePreview);
+
+        // Bulk selection + delete
+        const selectAll = document.getElementById('selectAllMaterials');
+        const bulkBtn = document.getElementById('bulkDeleteBtn');
+        const tableForm = document.getElementById('materialsTableForm');
+        function updateBulkBtn(){
+            const anyChecked = [...document.querySelectorAll('.rowSelectMaterial')].some(cb=>cb.checked);
+            if (bulkBtn){ bulkBtn.disabled = !anyChecked; }
+        }
+        selectAll?.addEventListener('change', ()=>{
+            document.querySelectorAll('.rowSelectMaterial').forEach(cb=>{ cb.checked = !!selectAll.checked; });
+            updateBulkBtn();
+        });
+        document.querySelectorAll('.rowSelectMaterial').forEach(cb=>{
+            cb.addEventListener('change', updateBulkBtn);
+        });
+        document.getElementById('bulkDeleteForm')?.addEventListener('submit', (e)=>{
+            e.preventDefault();
+            if (!tableForm) return;
+            const anyChecked = [...document.querySelectorAll('.rowSelectMaterial')].some(cb=>cb.checked);
+            if (!anyChecked) return;
+            const ok = confirm('Are you sure you want to delete the selected materials?');
+            if (ok){ tableForm.submit(); }
+        });
         pModal?.addEventListener('click', (e)=>{ if(e.target===pModal) closePreview(); });
         document.querySelectorAll('.btnPreviewMaterial').forEach(btn => {
             btn.addEventListener('click', ()=>{

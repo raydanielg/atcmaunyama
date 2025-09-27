@@ -2,20 +2,16 @@
     <div class="py-4">
         <div class="flex items-center justify-between mb-2">
             <div>
-                <h1 class="text-xl font-semibold text-gray-900">Material Categories</h1>
-                <p class="text-sm text-gray-500">Manage categories used by materials. Add SVG icons to brand each category.</p>
+                <h1 class="text-xl font-semibold text-gray-900">Material Level</h1>
+                <p class="text-sm text-gray-500">Read-only view. Assignments are managed from Learning → Education Levels.</p>
             </div>
-            <button id="btnOpenAddCat" class="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-sm shadow">
-                <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" /></svg>
-                <span>Add Category</span>
-            </button>
         </div>
         <div class="border-t border-dashed mb-4"></div>
 
         <div class="mb-3 flex items-start justify-between gap-4">
             <form method="GET" class="flex items-center gap-2 relative" autocomplete="off">
                 <div class="relative">
-                    <input id="catSearchInput" type="text" name="q" value="{{ $q ?? '' }}" placeholder="Search categories..." class="w-72 border rounded-lg px-3 py-2 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" />
+                    <input id="catSearchInput" type="text" name="q" value="{{ $q ?? '' }}" placeholder="Search levels..." class="w-72 border rounded-lg px-3 py-2 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" />
                     <div id="catSuggestBox" class="absolute z-10 mt-1 w-full bg-white border rounded-lg shadow hidden max-h-56 overflow-auto"></div>
                 </div>
                 <button class="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50 text-sm">
@@ -30,8 +26,7 @@
                 <thead class="bg-gray-50 text-gray-700">
                     <tr class="text-sm">
                         <th class="px-4 py-3 font-medium">Name</th>
-                        <th class="px-4 py-3 font-medium">Icon</th>
-                        <th class="px-4 py-3 font-medium text-right">Actions</th>
+                        <th class="px-4 py-3 font-medium">Assigned Types</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-100">
@@ -39,29 +34,25 @@
                         <tr class="text-sm">
                             <td class="px-4 py-3 text-gray-900">{{ $cat->name }}</td>
                             <td class="px-4 py-3">
-                                <div class="w-6 h-6 text-gray-700">{!! $cat->icon !!}</div>
+                                @php
+                                    $types = ($cat->types ?? collect());
+                                    // Deduplicate by normalized name (in case duplicates exist across pivot)
+                                    $uniqueTypes = $types->unique(function($t){ return strtolower(trim($t->name ?? '')); })->values();
+                                @endphp
+                                @if($uniqueTypes->isEmpty())
+                                    <span class="text-gray-400 text-sm">None</span>
+                                @else
+                                    <div class="flex flex-wrap gap-1">
+                                        @foreach($uniqueTypes as $s)
+                                            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200 text-xs">
+                                                <span class="material-symbols-outlined text-[14px]">bookmark</span>
+                                                {{ $s->name }}
+                                            </span>
+                                        @endforeach
+                                    </div>
+                                @endif
                             </td>
-                            <td class="px-4 py-3">
-                                <div class="flex items-center justify-end gap-2">
-                                    <button
-                                        class="btnEditCat inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-gray-200 text-gray-700 hover:bg-gray-50"
-                                        data-id="{{ $cat->id }}"
-                                        data-name="{{ $cat->name }}"
-                                        data-icon='@json($cat->icon)'
-                                    >
-                                        <span class="material-symbols-outlined text-[18px]">edit</span>
-                                        <span class="text-sm">Edit</span>
-                                    </button>
-                                    <form class="js-confirm-delete" method="POST" action="{{ route('materials.categories.destroy', $cat) }}" data-confirm-title="Delete Category" data-confirm-message="Are you sure you want to delete this category?">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button type="submit" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-red-200 text-red-600 hover:bg-red-50">
-                                            <span class="material-symbols-outlined text-[18px]">delete</span>
-                                            <span class="text-sm">Delete</span>
-                                        </button>
-                                    </form>
-                                </div>
-                            </td>
+                            
                         </tr>
                     @empty
                         <tr>
@@ -102,10 +93,10 @@
 </defs>
 </svg>
                                     </div>
-                                    <div class="text-gray-500 text-sm">No categories yet. Start by adding one.</div>
+                                    <div class="text-gray-500 text-sm">No levels yet. Start by adding one.</div>
                                     <button id="btnOpenAddCatEmpty" class="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-sm shadow">
                                         <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" /></svg>
-                                        <span>Add Category</span>
+                                        <span>Add Level</span>
                                     </button>
                                 </div>
                             </td>
@@ -115,71 +106,6 @@
             </table>
         </div>
         <div class="mt-4">{{ ($categories ?? null)?->links() }}</div>
-    </div>
-
-    <!-- Add Category Modal -->
-    <div id="addCatModal" class="fixed inset-0 bg-black/30 hidden z-50">
-        <div class="min-h-full w-full grid place-items-center p-4">
-            <div class="bg-white rounded-lg shadow max-w-lg w-full">
-                <div class="px-4 py-3 border-b flex items-center justify-between">
-                    <h3 class="font-semibold">Add Category</h3>
-                    <button id="btnCloseAddCat" class="p-1 hover:bg-gray-100 rounded">
-                        <span class="material-symbols-outlined">close</span>
-                    </button>
-                </div>
-                <form method="POST" action="{{ route('materials.categories.store') }}" class="p-4">
-                    @csrf
-                    <div class="grid gap-4">
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700">Name</label>
-                            <input name="name" required class="mt-1 w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" />
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700">SVG Icon (optional)</label>
-                            <textarea name="icon" rows="4" placeholder="<svg>...</svg>" class="mt-1 w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"></textarea>
-                            <p class="text-xs text-gray-500 mt-1">Paste inline SVG markup. It will render in the table.</p>
-                        </div>
-                    </div>
-                    <div class="mt-4 flex items-center justify-end gap-2">
-                        <button type="button" id="btnCancelAddCat" class="px-3 py-2 rounded-lg border border-gray-200 text-gray-700 hover:bg-gray-50">Cancel</button>
-                        <button type="submit" class="px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white">Save</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
-
-    <!-- Edit Category Modal -->
-    <div id="editCatModal" class="fixed inset-0 bg-black/30 hidden z-50">
-        <div class="min-h-full w-full grid place-items-center p-4">
-            <div class="bg-white rounded-lg shadow max-w-lg w-full">
-                <div class="px-4 py-3 border-b flex items-center justify-between">
-                    <h3 class="font-semibold">Edit Category</h3>
-                    <button id="btnCloseEditCat" class="p-1 hover:bg-gray-100 rounded">
-                        <span class="material-symbols-outlined">close</span>
-                    </button>
-                </div>
-                <form id="editCatForm" method="POST" action="#" class="p-4">
-                    @csrf
-                    @method('PUT')
-                    <div class="grid gap-4">
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700">Name</label>
-                            <input id="editCatName" name="name" required class="mt-1 w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" />
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700">SVG Icon (optional)</label>
-                            <textarea id="editCatIcon" name="icon" rows="4" class="mt-1 w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"></textarea>
-                            <p class="text-xs text-gray-500 mt-1">Paste inline SVG markup.</p>
-                        </div>
-                    </div>
-                    <div class="mt-4 flex items-center justify-end gap-2">
-                        <button type="button" id="btnCancelEditCat" class="px-3 py-2 rounded-lg border border-gray-200 text-gray-700 hover:bg-gray-50">Cancel</button>
-                        <button type="submit" class="px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white">Update</button>
-                    </div>
-                </form>
-            </div>
-        </div>
     </div>
 
     <script>
@@ -213,31 +139,74 @@
             }, 250);
         });
         document.addEventListener('click', (e)=>{ if (!sBox?.contains(e.target) && e.target !== sInput) hideS(); });
+        function renderTypes(filter=''){
+            const f = (filter||'').trim().toLowerCase();
+            const items = typesCache.filter(t => !f || (t.name||'').toLowerCase().includes(f));
+            if (items.length === 0){
+                typesList.innerHTML = '<div class="col-span-2 text-center text-gray-500 py-8">No types found.</div>';
+                return;
+            }
+            typesList.innerHTML = items.map(t => `
+                <label class="flex items-center gap-3 p-2 rounded border hover:bg-gray-50">
+                    <input type="checkbox" class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded" value="${t.id}" ${t.assigned ? 'checked' : ''}>
+                    <span class="text-sm text-gray-800">${t.name}</span>
+                </label>
+            `).join('');
+        }
 
-        // Modals open/close
-        const addModal = document.getElementById('addCatModal');
-        const editModal = document.getElementById('editCatModal');
-        function open(m){ m?.classList.remove('hidden'); }
-        function close(m){ m?.classList.add('hidden'); }
-        document.getElementById('btnOpenAddCat')?.addEventListener('click', ()=>open(addModal));
-        document.getElementById('btnOpenAddCatEmpty')?.addEventListener('click', ()=>open(addModal));
-        document.getElementById('btnCloseAddCat')?.addEventListener('click', ()=>close(addModal));
-        document.getElementById('btnCancelAddCat')?.addEventListener('click', ()=>close(addModal));
-        document.getElementById('btnCloseEditCat')?.addEventListener('click', ()=>close(editModal));
-        document.getElementById('btnCancelEditCat')?.addEventListener('click', ()=>close(editModal));
+        document.getElementById('btnCloseAssignTypes')?.addEventListener('click', ()=>close(assignModal));
+        document.getElementById('btnCancelAssignTypes')?.addEventListener('click', ()=>close(assignModal));
+        typesFilter?.addEventListener('input', ()=>renderTypes(typesFilter.value));
 
-        // Edit buttons wire-up
-        Array.from(document.querySelectorAll('.btnEditCat')).forEach(btn=>{
-            btn.addEventListener('click', ()=>{
-                const id = btn.getAttribute('data-id');
-                const name = btn.getAttribute('data-name') || '';
-                const icon = JSON.parse(btn.getAttribute('data-icon') || 'null') || '';
-                const form = document.getElementById('editCatForm');
-                form.action = `{{ url('/materials/categories') }}/${id}`;
-                document.getElementById('editCatName').value = name;
-                document.getElementById('editCatIcon').value = icon;
-                open(editModal);
+        Array.from(document.querySelectorAll('.btnAssignTypes')).forEach(btn=>{
+            btn.addEventListener('click', async ()=>{
+                currentLevelId = parseInt(btn.getAttribute('data-id'));
+                assignLevelName.textContent = btn.getAttribute('data-name') || '';
+                typesList.innerHTML = '<div class="col-span-2 text-center text-gray-500 py-8">Loading...</div>';
+                open(assignModal);
+                try{
+                    const url = new URL(`{{ url('materials/categories') }}/${currentLevelId}/types-json`, window.location.origin);
+                    const res = await fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' }});
+                    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                    const data = await res.json();
+                    // Deduplicate by name just in case
+                    const map = new Map();
+                    for (const t of (Array.isArray(data)?data:[])){
+                        const k = String(t.name||'').toLowerCase();
+                        if (!map.has(k)) map.set(k, { id: t.id, name: t.name, assigned: !!t.assigned });
+                        else { const cur = map.get(k); cur.assigned = cur.assigned || !!t.assigned; }
+                    }
+                    typesCache = Array.from(map.values()).sort((a,b)=>String(a.name||'').localeCompare(String(b.name||'')));
+                    renderTypes(typesFilter.value);
+                }catch(e){
+                    console.error('Load types failed', e);
+                    typesList.innerHTML = '<div class="col-span-2 text-center text-red-500 py-8">Failed to load types. Please refresh.</div>';
+                }
             });
+        });
+
+        document.getElementById('btnSaveAssignTypes')?.addEventListener('click', async ()=>{
+            if (!currentLevelId) return;
+            const checked = Array.from(typesList.querySelectorAll('input[type="checkbox"]:checked')).map(i=>parseInt(i.value));
+            const btn = document.getElementById('btnSaveAssignTypes');
+            const original = btn.innerHTML;
+            btn.disabled = true; btn.innerHTML = '<span class="material-symbols-outlined animate-spin mr-2">progress_activity</span>Saving...';
+            try{
+                const url = new URL(`{{ url('materials/categories') }}/${currentLevelId}/types-sync`, window.location.origin);
+                const res = await fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                    },
+                    body: JSON.stringify({ type_ids: checked })
+                });
+                const data = await res.json();
+                if (data && data.success){ window.location.reload(); }
+                else alert('Failed to save assignments.');
+            }catch(e){ alert('Error saving.'); }
+            finally { btn.disabled = false; btn.innerHTML = original; }
         });
     })();
     </script>

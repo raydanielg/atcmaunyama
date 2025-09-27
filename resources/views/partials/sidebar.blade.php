@@ -38,13 +38,37 @@
                         <span>Classes</span>
                     </a>
                 </li>
-                <li>
-                    @php $materialsHref = Route::has('materials.index') ? route('materials.index') : url('/materials'); @endphp
-                    <a href="{{ $materialsHref }}"
-                       class="group flex items-center gap-3 px-3 py-2 rounded-md {{ request()->routeIs('materials.*') || request()->is('materials') ? 'bg-indigo-50 text-indigo-700' : 'text-gray-700 hover:bg-gray-50' }}">
-                        <span class="material-symbols-outlined">menu_book</span>
-                        <span>Materilas</span>
-                    </a>
+                <li class="mt-2">
+                    <div class="text-xs font-semibold text-gray-500 px-3 mb-1">Learning Materials</div>
+                    <ul class="space-y-1">
+                        <li>
+                            @php $materialsHref = Route::has('materials.index') ? route('materials.index') : url('/materials'); @endphp
+                            <a href="{{ $materialsHref }}"
+                               class="group flex items-center gap-3 px-3 py-2 rounded-md {{ request()->routeIs('materials.index') || request()->is('materials') ? 'bg-indigo-50 text-indigo-700' : 'text-gray-700 hover:bg-gray-50' }}">
+                                <span class="material-symbols-outlined">inventory_2</span>
+                                <span>All Materials</span>
+                            </a>
+                        </li>
+                        <li>
+                            @if(Route::has('materials.subcategories.index'))
+                            <a href="{{ route('materials.subcategories.index') }}"
+                               class="group flex items-center gap-3 px-3 py-2 rounded-md {{ request()->routeIs('materials.subcategories.*') ? 'bg-indigo-50 text-indigo-700' : 'text-gray-700 hover:bg-gray-50' }}">
+                                <span class="material-symbols-outlined">subdirectory_arrow_right</span>
+                                <span>Material Type</span>
+                            </a>
+                            @endif
+                        </li>
+                        <li>
+                            @if(Route::has('materials.subsubcategories.index'))
+                            <a href="{{ route('materials.subsubcategories.index') }}"
+                               class="group flex items-center gap-3 px-3 py-2 rounded-md {{ request()->routeIs('materials.subsubcategories.*') ? 'bg-indigo-50 text-indigo-700' : 'text-gray-700 hover:bg-gray-50' }}">
+                                <span class="material-symbols-outlined">subdirectory_arrow_right</span>
+                                <span>Material Sub Type</span>
+                            </a>
+                            @endif
+                        </li>
+                        <!-- Material Level and Material Subjects entries intentionally removed -->
+                    </ul>
                 </li>
                 <li>
                     @php $notifHref = Route::has('mobile.notifications.index') ? route('mobile.notifications.index') : url('/notifications'); @endphp

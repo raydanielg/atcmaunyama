@@ -11,7 +11,9 @@ class CategoriesController extends Controller
     public function index(Request $request)
     {
         $q = trim((string) $request->get('q', ''));
-        $categories = Category::when($q !== '', function ($query) use ($q) {
+        $categories = Category::with('types')
+            ->where('name', '!=', 'Unassigned')
+            ->when($q !== '', function ($query) use ($q) {
                 $query->where('name', 'like', "%$q%");
             })
             ->orderBy('name')
@@ -59,5 +61,43 @@ class CategoriesController extends Controller
             ->limit(8)
             ->pluck('name');
         return response()->json($names);
+    }
+
+    /**
+     * List all Material Types with assignment status for a given Level (Category).
+     */
+    public function typesJson(Category $category)
+    {
+        $assignedIds = $category->types()->pluck('subcategories.id')->all();
+        $types = \App\Models\Subcategory::orderBy('name')->get(['id','name','category_id'])
+            ->map(function($t) use ($assignedIds){
+                return [
+                    'id' => $t->id,
+                    'name' => $t->name,
+                    'assigned' => in_array($t->id, $assignedIds, true),
+                ];
+            });
+        return response()->json($types);
+    }
+
+    /**
+     * Assign selected Material Types to the given Level.
+     * This will set category_id on the selected types to the current category.
+     * It will NOT unassign other types from this category.
+     */
+    public function typesSync(Request $request, Category $category)
+    {
+        $data = $request->validate([
+            'type_ids' => 'array',
+            'type_ids.*' => 'integer|exists:subcategories,id',
+        ]);
+
+        $selected = collect($data['type_ids'] ?? [])->filter()->unique()->values();
+        $selectedIds = $selected->all();
+
+        // Sync pivot for this category only (attach selected, detach others for this category)
+        $category->types()->sync($selectedIds);
+
+        return response()->json(['success' => true]);
     }
 }

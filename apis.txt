@@ -63,21 +63,34 @@ Public Mobile Endpoints
      curl "http://127.0.0.1:8000/api/mobile/content/classes/12/subject"
    - Notes: primarySubject comes from SchoolClass.subject_id; extraSubjects come from pivot school_class_subject
 
-6) Categories (Materials taxonomy)
-   - GET /api/mobile/content/categories
-   - Query: q (search)
-   - Response (paginated): { data: [{ id, name, icon }], pagination }
+6) Public Materials Flow (Types → Levels → Classes → Subjects → Materials)
+   - Base prefix: /api/public/materials
 
-7) Subcategories
-   - GET /api/mobile/content/subcategories
-   - Query: category_id, year, q (search)
-   - Response (paginated): { data: [{ id, name, category_id, year, icon, category }], pagination }
+   6.1) List Material Types
+       - GET /api/public/materials/types
+       - Response: [{ id, name }]
+       - Example: curl http://127.0.0.1:8000/api/public/materials/types
 
-8) Materials (Learning materials)
-   - GET /api/mobile/content/materials
-   - Query: category_id, subcategory_id, q (search)
-   - Response (paginated): { data: [{ id, title, slug, category_id, subcategory_id, mime, size, previewUrl, category, subcategory }], pagination }
-   - Note: previewUrl uses file storage URL if available.
+   6.2) List Levels (optionally filtered by Type)
+       - GET /api/public/materials/levels?type_id={typeId}
+       - Response: [{ id, name }]
+       - Example: curl "http://127.0.0.1:8000/api/public/materials/levels?type_id=3"
+
+   6.3) List Classes for a Level
+       - GET /api/public/materials/classes?level_id={levelId}
+       - Response: [{ id, name, level_id }]
+       - Example: curl "http://127.0.0.1:8000/api/public/materials/classes?level_id=2"
+
+   6.4) List Subjects for a Class (optionally filtered by Type)
+       - GET /api/public/materials/subjects?class_id={classId}&type_id={typeId?}
+       - Response: [{ id, name }]
+       - Example: curl "http://127.0.0.1:8000/api/public/materials/subjects?class_id=10&type_id=3"
+
+   6.5) List Materials for Type + Class + Subject
+       - GET /api/public/materials?type_id={id}&class_id={id}&subject_id={id}&q={optional}
+       - Response: { data: [{ id, title, type, class, subject, url }] }
+       - The url is an internal link on our domain; use it to open or download the file.
+       - Example: curl "http://127.0.0.1:8000/api/public/materials?type_id=3&class_id=10&subject_id=7"
 
 9) Notes (Learning notes)
    - GET /api/mobile/content/notes
@@ -168,14 +181,31 @@ Classes
 
 Materials (Admin)
 - Index: GET /materials
-- Categories: GET/POST/PUT/DELETE /materials/categories, suggest /materials/categories/suggest
-- Subcategories: GET/POST/PUT/DELETE /materials/subcategories, suggest /materials/subcategories/suggest
+- Material Level: GET/POST/PUT/DELETE /materials/categories, suggest /materials/categories/suggest
+  - Assign types (list): GET /materials/categories/{id}/types-json
+  - Assign types (sync): POST /materials/categories/{id}/types-sync
+    - Behavior: Many-to-many via pivot table category_subcategory. The sync call replaces this Level's set of allowed Types in the pivot.
+- Material Type: GET/POST/PUT/DELETE /materials/subcategories, suggest /materials/subcategories/suggest
+  - Assign subjects (list): GET /materials/subcategories/{id}/subjects-json
+  - Assign subjects (sync): POST /materials/subcategories/{id}/subjects-sync
 - AJAX: GET /materials/subcategories/json
 - AJAX: GET /materials/subsubcategories/json  (query: subcategory_id)
 - Preview (inline): GET /materials/{material}/preview
-- Sub Sub Categories (page): GET /materials/subsubcategories
-- Sub Sub Categories CRUD: POST /materials/subsubcategories, PUT /materials/subsubcategories/{id}, DELETE /materials/subsubcategories/{id}
+- Material Subject (page): GET /materials/subsubcategories
+- Material Subject CRUD: POST /materials/subsubcategories, PUT /materials/subsubcategories/{id}, DELETE /materials/subsubcategories/{id}
+  - RESET all materials for subject: DELETE /materials/subsubcategories/{id}/reset
 - CRUD: POST/PUT/DELETE /materials, /materials/{material}
+
+Public Materials Browsing API (read-only)
+- List Types: GET /api/public/materials/types
+  - Response: [{ id, name }]
+- List Levels for a Type: GET /api/public/materials/types/{type_id}/levels
+  - Response: [{ id, name }]
+- List Subjects for Type+Level: GET /api/public/materials/types/{type_id}/levels/{level_id}/subjects
+  - Response: ["Subject Name", ...] (distinct names only)
+- List Materials: GET /api/public/materials?type_id={id}&level_id={id}&subject_name={optional}&q={optional}
+  - Response: [{ id, title, type, level, subject, url }]
+  - url field is an internal link on our domain (materials.download via slug, or preview)
   - Fields: title, category_id, subcategory_id, sub_subcategory_id?, url?, file?
 - Public download by slug: GET /m/{slug}
 

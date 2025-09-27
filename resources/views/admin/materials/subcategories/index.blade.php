@@ -1,13 +1,27 @@
 <x-admin-layout>
     <div class="py-4">
+        @if (session('status'))
+            <div class="mb-3 px-4 py-2 rounded border border-green-200 bg-green-50 text-green-800 text-sm">
+                {{ session('status') }}
+            </div>
+        @endif
+        @if ($errors->any())
+            <div class="mb-3 px-4 py-2 rounded border border-red-200 bg-red-50 text-red-800 text-sm">
+                <ul class="list-disc pl-5">
+                    @foreach ($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+            </div>
+        @endif
         <div class="flex items-center justify-between mb-2">
             <div>
-                <h1 class="text-xl font-semibold text-gray-900">Material Subcategories</h1>
-                <p class="text-sm text-gray-500">Manage subcategories and map them to categories. SVG icons supported.</p>
+                <h1 class="text-xl font-semibold text-gray-900">Material Type</h1>
+                <p class="text-sm text-gray-500">Manage material types and map them to material levels. SVG icons supported.</p>
             </div>
             <button id="btnOpenAddSub" class="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-sm shadow">
                 <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" /></svg>
-                <span>Add Subcategory</span>
+                <span>Add Type</span>
             </button>
         </div>
         <div class="border-t border-dashed mb-4"></div>
@@ -15,7 +29,7 @@
         <div class="mb-3 flex items-start justify-between gap-4">
             <form method="GET" class="flex items-center gap-2 relative" autocomplete="off">
                 <div class="relative">
-                    <input id="subSearchInput" type="text" name="q" value="{{ $q ?? '' }}" placeholder="Search subcategories..." class="w-72 border rounded-lg px-3 py-2 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" />
+                    <input id="subSearchInput" type="text" name="q" value="{{ $q ?? '' }}" placeholder="Search types..." class="w-72 border rounded-lg px-3 py-2 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" />
                     <div id="subSuggestBox" class="absolute z-10 mt-1 w-full bg-white border rounded-lg shadow hidden max-h-56 overflow-auto"></div>
                 </div>
                 <button class="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50 text-sm">
@@ -30,9 +44,6 @@
                 <thead class="bg-gray-50 text-gray-700">
                     <tr class="text-sm">
                         <th class="px-4 py-3 font-medium">Name</th>
-                        <th class="px-4 py-3 font-medium">Category</th>
-                        <th class="px-4 py-3 font-medium">Year</th>
-                        <th class="px-4 py-3 font-medium">Icon</th>
                         <th class="px-4 py-3 font-medium text-right">Actions</th>
                     </tr>
                 </thead>
@@ -40,23 +51,17 @@
                     @forelse(($subcategories ?? []) as $sub)
                         <tr class="text-sm">
                             <td class="px-4 py-3 text-gray-900">{{ $sub->name }}</td>
-                            <td class="px-4 py-3 text-gray-700">{{ $sub->category?->name }}</td>
-                            <td class="px-4 py-3 text-gray-700">{{ $sub->year ?? '-' }}</td>
-                            <td class="px-4 py-3"><div class="w-6 h-6 text-gray-700">{!! $sub->icon !!}</div></td>
-                            <td class="px-4 py-3">
+                            <td class="px-4 py-3 w-0">
                                 <div class="flex items-center justify-end gap-2">
                                     <button
                                         class="btnEditSub inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-gray-200 text-gray-700 hover:bg-gray-50"
                                         data-id="{{ $sub->id }}"
                                         data-name="{{ $sub->name }}"
-                                        data-category-id="{{ $sub->category_id }}"
-                                        data-year="{{ $sub->year }}"
-                                        data-icon='@json($sub->icon)'
                                     >
                                         <span class="material-symbols-outlined text-[18px]">edit</span>
                                         <span class="text-sm">Edit</span>
                                     </button>
-                                    <form class="js-confirm-delete" method="POST" action="{{ route('materials.subcategories.destroy', $sub) }}" data-confirm-title="Delete Subcategory" data-confirm-message="Are you sure you want to delete this subcategory?">
+                                    <form class="js-confirm-delete" method="POST" action="{{ route('materials.subcategories.destroy', $sub) }}" data-confirm-title="Delete Type" data-confirm-message="Are you sure you want to delete this type?">
                                         @csrf
                                         @method('DELETE')
                                         <button type="submit" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-red-200 text-red-600 hover:bg-red-50">
@@ -74,10 +79,10 @@
                                     <div class="text-gray-800">
                                         <svg class="w-auto max-w-[16rem] h-40 text-gray-800" aria-hidden="true" width="411" height="578" viewBox="0 0 411 578" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M59 6C59 2.68629 61.6863 0 65 0H261C264.314 0 267 2.68629 267 6V245C267 248.314 264.314 251 261 251H65C61.6863 251 59 248.314 59 245V6Z" fill="#d6e2fb"/></svg>
                                     </div>
-                                    <div class="text-gray-500 text-sm">No subcategories yet. Start by adding one.</div>
+                                    <div class="text-gray-500 text-sm">No material types yet. Start by adding one.</div>
                                     <button id="btnOpenAddSubEmpty" class="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-sm shadow">
                                         <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" /></svg>
-                                        <span>Add Subcategory</span>
+                                        <span>Add Type</span>
                                     </button>
                                 </div>
                             </td>
@@ -89,12 +94,14 @@
         <div class="mt-4">{{ ($subcategories ?? null)?->links() }}</div>
     </div>
 
+    
+
     <!-- Add Subcategory Modal -->
     <div id="addSubModal" class="fixed inset-0 bg-black/30 hidden z-50">
         <div class="min-h-full w-full grid place-items-center p-4">
             <div class="bg-white rounded-lg shadow max-w-lg w-full">
                 <div class="px-4 py-3 border-b flex items-center justify-between">
-                    <h3 class="font-semibold">Add Subcategory</h3>
+                    <h3 class="font-semibold">Add Type</h3>
                     <button id="btnCloseAddSub" class="p-1 hover:bg-gray-100 rounded">
                         <span class="material-symbols-outlined">close</span>
                     </button>
@@ -105,24 +112,6 @@
                         <div>
                             <label class="block text-sm font-medium text-gray-700">Name</label>
                             <input name="name" required class="mt-1 w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" />
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700">Category</label>
-                            <select name="category_id" required class="mt-1 w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
-                                <option value="">Select category</option>
-                                @foreach(($categories ?? []) as $c)
-                                    <option value="{{ $c->id }}">{{ $c->name }}</option>
-                                @endforeach
-                            </select>
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700">Year (optional)</label>
-                            <input type="number" name="year" min="1900" max="2100" placeholder="e.g. 2024" class="mt-1 w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" />
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700">SVG Icon (optional)</label>
-                            <textarea name="icon" rows="4" placeholder="<svg>...</svg>" class="mt-1 w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"></textarea>
-                            <p class="text-xs text-gray-500 mt-1">Paste inline SVG markup.</p>
                         </div>
                     </div>
                     <div class="mt-4 flex items-center justify-end gap-2">
@@ -139,7 +128,7 @@
         <div class="min-h-full w-full grid place-items-center p-4">
             <div class="bg-white rounded-lg shadow max-w-lg w-full">
                 <div class="px-4 py-3 border-b flex items-center justify-between">
-                    <h3 class="font-semibold">Edit Subcategory</h3>
+                    <h3 class="font-semibold">Edit Type</h3>
                     <button id="btnCloseEditSub" class="p-1 hover:bg-gray-100 rounded">
                         <span class="material-symbols-outlined">close</span>
                     </button>
@@ -151,24 +140,6 @@
                         <div>
                             <label class="block text-sm font-medium text-gray-700">Name</label>
                             <input id="editSubName" name="name" required class="mt-1 w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" />
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700">Category</label>
-                            <select id="editSubCategory" name="category_id" required class="mt-1 w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
-                                <option value="">Select category</option>
-                                @foreach(($categories ?? []) as $c)
-                                    <option value="{{ $c->id }}">{{ $c->name }}</option>
-                                @endforeach
-                            </select>
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700">Year (optional)</label>
-                            <input id="editSubYear" type="number" name="year" min="1900" max="2100" placeholder="e.g. 2024" class="mt-1 w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" />
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700">SVG Icon (optional)</label>
-                            <textarea id="editSubIcon" name="icon" rows="4" class="mt-1 w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"></textarea>
-                            <p class="text-xs text-gray-500 mt-1">Paste inline SVG markup.</p>
                         </div>
                     </div>
                     <div class="mt-4 flex items-center justify-end gap-2">
@@ -215,6 +186,7 @@
         // Modals open/close
         const addModal = document.getElementById('addSubModal');
         const editModal = document.getElementById('editSubModal');
+        
         function open(m){ m?.classList.remove('hidden'); }
         function close(m){ m?.classList.add('hidden'); }
         document.getElementById('btnOpenAddSub')?.addEventListener('click', ()=>open(addModal));
@@ -223,24 +195,32 @@
         document.getElementById('btnCancelAddSub')?.addEventListener('click', ()=>close(addModal));
         document.getElementById('btnCloseEditSub')?.addEventListener('click', ()=>close(editModal));
         document.getElementById('btnCancelEditSub')?.addEventListener('click', ()=>close(editModal));
+        
+
+        // Delete confirmation
+        document.querySelectorAll('form.js-confirm-delete').forEach(f => {
+            f.addEventListener('submit', (e) => {
+                const title = f.getAttribute('data-confirm-title') || 'Confirm';
+                const msg = f.getAttribute('data-confirm-message') || 'Are you sure?';
+                if (!confirm(`${title}\n${msg}`)) {
+                    e.preventDefault();
+                }
+            });
+        });
 
         // Edit buttons wire-up
         Array.from(document.querySelectorAll('.btnEditSub')).forEach(btn=>{
             btn.addEventListener('click', ()=>{
                 const id = btn.getAttribute('data-id');
                 const name = btn.getAttribute('data-name') || '';
-                const catId = btn.getAttribute('data-category-id') || '';
-                const year = btn.getAttribute('data-year') || '';
-                const icon = JSON.parse(btn.getAttribute('data-icon') || 'null') || '';
                 const form = document.getElementById('editSubForm');
                 form.action = `{{ url('/materials/subcategories') }}/${id}`;
                 document.getElementById('editSubName').value = name;
-                document.getElementById('editSubCategory').value = catId;
-                document.getElementById('editSubYear').value = year;
-                document.getElementById('editSubIcon').value = icon;
                 open(editModal);
             });
         });
+
+        // Subject assignment removed
     })();
     </script>
 </x-admin-layout>

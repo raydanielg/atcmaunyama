@@ -9,6 +9,35 @@
                     <input type="text" name="s" value="{{ $s ?? '' }}" placeholder="Search level..." class="w-full pl-10 pr-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" />
                     <span class="material-symbols-outlined absolute left-2 top-1/2 -translate-y-1/2 text-gray-400">search</span>
                 </div>
+
+    <!-- Assign Material Types Modal -->
+    <div id="assignMaterialTypesModal" class="fixed inset-0 bg-black/40 z-40 hidden">
+        <div class="min-h-full flex items-center justify-center p-4">
+            <div class="w-full max-w-xl bg-white rounded-xl shadow-lg overflow-hidden">
+                <div class="flex items-center justify-between px-4 py-3 border-b">
+                    <h3 class="text-lg font-semibold">Assign Material Types to <span id="amtLevelName" class="text-green-700"></span></h3>
+                    <button type="button" id="btnCloseAssignMaterialTypes" class="p-1 rounded hover:bg-gray-100" aria-label="Close">
+                        <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+                    </button>
+                </div>
+                <div class="p-4">
+                    <div class="mb-3">
+                        <input id="amtFilter" type="text" placeholder="Filter material types..." class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500 focus:border-green-500" />
+                    </div>
+                    <div id="amtTypesContainer" class="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-[420px] overflow-y-auto">
+                        <div class="text-gray-500 text-sm">Loading types...</div>
+                    </div>
+                    <div class="flex items-center gap-2 pt-3">
+                        <button type="button" id="btnSaveAssignMaterialTypes" class="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-green-600 hover:bg-green-700 text-white text-sm shadow">
+                            <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg>
+                            <span>Save</span>
+                        </button>
+                        <button type="button" id="btnCancelAssignMaterialTypes" class="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50 text-sm">Cancel</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
             </form>
             <button type="button" id="btnOpenAddLevel" class="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-sm shadow">
                 <span class="material-symbols-outlined text-base">add_circle</span>
@@ -67,6 +96,13 @@
                                     data-icon="{{ $level->icon }}">
                                     <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 1 1 3 3L7 19l-4 1 1-4 12.5-12.5Z"/></svg>
                                     <span>Edit</span>
+                                </button>
+                                <button type="button"
+                                    class="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded border text-green-700 border-green-300 hover:bg-green-50 text-xs btnAssignMaterialTypes"
+                                    data-id="{{ $level->id }}"
+                                    data-name="{{ $level->name }}">
+                                    <span class="material-symbols-outlined text-[16px]">assignment_add</span>
+                                    <span>Assign Material Types</span>
                                 </button>
                                 <form method="POST" action="{{ route('learning.levels.destroy', $level) }}" class="js-confirm-delete" data-confirm-title="Delete Level" data-confirm-message="Are you sure you want to delete this level? This cannot be undone.">
                                     @csrf
@@ -376,6 +412,75 @@
         btnCancelALC?.addEventListener('click', alcClose);
         alcModal?.addEventListener('click', (e)=>{ if(e.target===alcModal) alcClose(); });
 
+        // Assign Material Types (bridge to Material Category by Level name)
+        const amtModal = document.getElementById('assignMaterialTypesModal');
+        const amtName = document.getElementById('amtLevelName');
+        const amtContainer = document.getElementById('amtTypesContainer');
+        const amtFilter = document.getElementById('amtFilter');
+        const btnCloseAMT = document.getElementById('btnCloseAssignMaterialTypes');
+        const btnCancelAMT = document.getElementById('btnCancelAssignMaterialTypes');
+        const btnSaveAMT = document.getElementById('btnSaveAssignMaterialTypes');
+        let currentAMTLevelId = null;
+        let amtCache = [];
+        function amtOpen(){ amtModal.classList.remove('hidden'); }
+        function amtClose(){ amtModal.classList.add('hidden'); }
+        function amtRender(filter=''){
+            const f = (filter||'').trim().toLowerCase();
+            const list = amtCache.filter(t => !f || (t.name||'').toLowerCase().includes(f));
+            if (!list.length){ amtContainer.innerHTML = '<div class="text-gray-500 text-sm">No types found.</div>'; return; }
+            amtContainer.innerHTML = list.map(t => `<label class="flex items-center gap-2 border rounded-lg px-3 py-2"><input type="checkbox" value="${t.id}" ${t.assigned ? 'checked' : ''} class="rounded"/><span class="text-sm text-gray-800">${t.name}</span></label>`).join('');
+        }
+        function getCheckedTypeIds(){ return Array.from(amtContainer.querySelectorAll('input[type="checkbox"]:checked')).map(el => parseInt(el.value)); }
+        amtFilter?.addEventListener('input', ()=> amtRender(amtFilter.value));
+        btnCloseAMT?.addEventListener('click', amtClose);
+        btnCancelAMT?.addEventListener('click', amtClose);
+        amtModal?.addEventListener('click', (e)=>{ if(e.target===amtModal) amtClose(); });
+
+        document.querySelectorAll('.btnAssignMaterialTypes').forEach(btn => {
+            btn.addEventListener('click', async ()=>{
+                currentAMTLevelId = parseInt(btn.getAttribute('data-id'));
+                amtName.textContent = btn.getAttribute('data-name') || '';
+                amtContainer.innerHTML = '<div class="text-gray-500 text-sm">Loading types...</div>';
+                amtOpen();
+                try{
+                    const url = `{{ url('learning/levels') }}/${currentAMTLevelId}/material-types-json`;
+                    const res = await fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' }});
+                    if (!res.ok) throw new Error('HTTP '+res.status);
+                    const data = await res.json();
+                    const map = new Map();
+                    for (const t of (Array.isArray(data)?data:[])){
+                        const k = String(t.name||'').toLowerCase();
+                        if (!map.has(k)) map.set(k, { id: t.id, name: t.name, assigned: !!t.assigned });
+                        else { const cur = map.get(k); cur.assigned = cur.assigned || !!t.assigned; }
+                    }
+                    amtCache = Array.from(map.values()).sort((a,b)=> String(a.name||'').localeCompare(String(b.name||'')));
+                    amtRender(amtFilter.value);
+                }catch(e){ amtContainer.innerHTML = '<div class="text-red-600 text-sm">Failed to load types.</div>'; }
+            });
+        });
+
+        btnSaveAMT?.addEventListener('click', async ()=>{
+            if (!currentAMTLevelId) return;
+            const ids = getCheckedTypeIds();
+            const original = btnSaveAMT.innerHTML; btnSaveAMT.disabled = true; btnSaveAMT.innerHTML = '<span class="material-symbols-outlined animate-spin mr-2">progress_activity</span>Saving...';
+            try{
+                const url = `{{ url('learning/levels') }}/${currentAMTLevelId}/material-types-sync`;
+                const res = await fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                    },
+                    body: JSON.stringify({ type_ids: ids })
+                });
+                const data = await res.json();
+                if (data && data.success){ amtClose(); }
+                else alert('Failed to save.');
+            }catch(e){ alert('Error saving.'); }
+            finally { btnSaveAMT.disabled = false; btnSaveAMT.innerHTML = original; }
+        });
+
         // Confirm delete modal logic
         const cModal = document.getElementById('confirmModal');
         const cTitle = document.getElementById('confirmTitle');
@@ -403,6 +508,7 @@
                 e.preventDefault();
                 const title = f.getAttribute('data-confirm-title') || 'Confirm';
                 const msg = f.getAttribute('data-confirm-message') || 'Are you sure?';
+                try{ const gl=document.getElementById('globalPageLoader'); if(gl){ gl.classList.add('hidden'); gl.classList.remove('flex'); } }catch{}
                 openConfirm(title, msg, f);
             });
         });

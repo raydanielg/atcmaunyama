@@ -3,10 +3,10 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\Category;
 use App\Models\Material;
 use App\Models\Subcategory;
 use App\Models\SubSubcategory;
+use App\Models\SchoolClass;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
@@ -18,7 +18,7 @@ class MaterialsController extends Controller
     {
         $q = trim((string) $request->get('q', ''));
 
-        $materials = Material::with(['category', 'subcategory', 'subSubcategory'])
+        $materials = Material::with(['subcategory','level','subject','class'])
             ->when($q !== '', function ($query) use ($q) {
                 $query->where('title', 'like', "%$q%");
             })
@@ -26,23 +26,30 @@ class MaterialsController extends Controller
             ->paginate(12)
             ->withQueryString();
 
-        $categories = Category::orderBy('name')->get(['id', 'name']);
-
-        return view('admin.materials.index', compact('materials', 'categories', 'q'));
+        return view('admin.materials.index', compact('materials', 'q'));
     }
 
     public function store(Request $request)
     {
         $data = $request->validate([
             'title' => 'required|string|max:200',
-            'category_id' => 'required|exists:categories,id',
             'subcategory_id' => 'required|exists:subcategories,id',
             'sub_subcategory_id' => 'nullable|exists:sub_subcategories,id',
-            'url' => 'nullable|required_without:file|url|max:2048',
-            'file' => 'nullable|required_without:url|file|mimes:pdf,doc,docx,ppt,pptx,xls,xlsx|max:25600',
+            'level_id' => 'required|integer|exists:levels,id',
+            'subject_id' => 'required|integer|exists:subjects,id',
+            'class_id' => 'required|integer|exists:school_classes,id',
+            'file' => 'required|file|mimes:pdf,doc,docx,ppt,pptx,xls,xlsx|max:25600',
         ]);
+
+        // If the chosen Material Type has sub types, force sub_subcategory_id to be present
+        $hasSubTypes = SubSubcategory::where('subcategory_id', $data['subcategory_id'])->exists();
+        if ($hasSubTypes && empty($data['sub_subcategory_id'])) {
+            return back()
+                ->withErrors(['sub_subcategory_id' => 'Please select a Material Sub Type for the chosen Material Type.'])
+                ->withInput();
+        }
         $data['user_id'] = Auth::id();
-        // If a file is uploaded, store it and auto-fill URL/path/mime/size
+        // Store file and auto-fill path/mime/size and generated url via slug
         if ($request->hasFile('file')) {
             $storedPath = $request->file('file')->store('materials', 'public');
             $data['path'] = $storedPath;
@@ -66,12 +73,21 @@ class MaterialsController extends Controller
     {
         $data = $request->validate([
             'title' => 'required|string|max:200',
-            'category_id' => 'required|exists:categories,id',
             'subcategory_id' => 'required|exists:subcategories,id',
             'sub_subcategory_id' => 'nullable|exists:sub_subcategories,id',
-            'url' => 'nullable|required_without:file|url|max:2048',
-            'file' => 'nullable|required_without:url|file|mimes:pdf,doc,docx,ppt,pptx,xls,xlsx|max:25600',
+            'level_id' => 'required|integer|exists:levels,id',
+            'subject_id' => 'required|integer|exists:subjects,id',
+            'class_id' => 'required|integer|exists:school_classes,id',
+            'file' => 'nullable|file|mimes:pdf,doc,docx,ppt,pptx,xls,xlsx|max:25600',
         ]);
+
+        // If the chosen Material Type has sub types, force sub_subcategory_id to be present
+        $hasSubTypes = SubSubcategory::where('subcategory_id', $data['subcategory_id'])->exists();
+        if ($hasSubTypes && empty($data['sub_subcategory_id'])) {
+            return back()
+                ->withErrors(['sub_subcategory_id' => 'Please select a Material Sub Type for the chosen Material Type.'])
+                ->withInput();
+        }
         if ($request->hasFile('file')) {
             $storedPath = $request->file('file')->store('materials', 'public');
             $data['path'] = $storedPath;
@@ -111,26 +127,28 @@ class MaterialsController extends Controller
         return response()->json($titles);
     }
 
+    // JSON helper for Material Types (Subcategories)
     public function subcategories(Request $request)
     {
-        $categoryId = $request->get('category_id');
-        $query = Subcategory::query();
-        if ($categoryId) {
-            $query->where('category_id', $categoryId);
-        }
-        $subs = $query->orderBy('name')->get(['id','name']);
-        return response()->json($subs);
+        $rows = Subcategory::query()
+            ->where('name', '!=', 'Unassigned')
+            ->orderBy('name')
+            ->get(['id','name']);
+        return response()->json($rows);
     }
 
-    public function subsubcategories(Request $request)
+    /**
+     * JSON helper for Material Sub Types by Material Type
+     */
+    public function subsubcategoriesByType(Request $request)
     {
-        $subcategoryId = $request->get('subcategory_id');
-        $query = SubSubcategory::query();
-        if ($subcategoryId) {
-            $query->where('subcategory_id', $subcategoryId);
-        }
-        $subs = $query->orderBy('name')->get(['id','name']);
-        return response()->json($subs);
+        $subcategoryId = (int) $request->query('subcategory_id', 0);
+        if (!$subcategoryId) return response()->json([]);
+        $rows = SubSubcategory::query()
+            ->where('subcategory_id', $subcategoryId)
+            ->orderBy('name')
+            ->get(['id','name']);
+        return response()->json($rows);
     }
 
     // Public download by slug

@@ -106,6 +106,43 @@ class LevelsController extends Controller
     }
 
     /**
+     * Bridge: list Material Types assigned to the Material Level (Category) that matches this Learning Level name.
+     * If the Category doesn't exist yet, create it with the same name.
+     */
+    public function materialTypesJson(Level $level)
+    {
+        $category = \App\Models\Category::firstOrCreate(['name' => $level->name], ['icon' => null]);
+        // Get assigned type IDs via pivot
+        $assignedIds = $category->types()->pluck('subcategories.id')->all();
+        $types = \App\Models\Subcategory::orderBy('name')->get(['id','name'])
+            ->map(function($t) use ($assignedIds){
+                return [
+                    'id' => $t->id,
+                    'name' => $t->name,
+                    'assigned' => in_array($t->id, $assignedIds, true),
+                ];
+            });
+        return response()->json($types);
+    }
+
+    /**
+     * Bridge: sync Material Types assigned to the Category matching this Learning Level name.
+     */
+    public function syncMaterialTypes(Request $request, Level $level)
+    {
+        $data = $request->validate([
+            'type_ids' => ['array'],
+            'type_ids.*' => ['integer','exists:subcategories,id'],
+        ]);
+
+        $category = \App\Models\Category::firstOrCreate(['name' => $level->name], ['icon' => null]);
+        $selectedIds = collect($data['type_ids'] ?? [])->filter()->unique()->values()->all();
+        $category->types()->sync($selectedIds);
+
+        return response()->json(['success' => true]);
+    }
+
+    /**
      * Generate a short, high-quality description for a level name via Google Generative Language API (Gemini).
      */
     public function aiSuggestDescription(Request $request)

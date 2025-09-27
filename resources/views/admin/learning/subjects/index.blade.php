@@ -7,6 +7,37 @@
                 <div class="text-xs uppercase tracking-wide text-gray-500">Learning</div>
                 <h1 class="text-2xl font-bold text-gray-900">All Subjects</h1>
             </div>
+
+    <!-- View Subject Modal -->
+    <div id="viewSubjectModal" class="fixed inset-0 bg-black/40 z-40 hidden">
+        <div class="min-h-full flex items-center justify-center p-4">
+            <div class="w-full max-w-xl bg-white rounded-xl shadow-lg overflow-hidden">
+                <div class="flex items-center justify-between px-4 py-3 border-b">
+                    <h3 class="text-lg font-semibold">View Subject</h3>
+                    <button type="button" id="btnCloseViewSubject" class="p-1 rounded hover:bg-gray-100" aria-label="Close">
+                        <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+                    </button>
+                </div>
+                <div class="p-4 space-y-3">
+                    <div>
+                        <div class="text-xs text-gray-500">Name</div>
+                        <div id="viewSubjName" class="text-gray-900 font-medium">-</div>
+                    </div>
+                    <div>
+                        <div class="text-xs text-gray-500">Description</div>
+                        <div id="viewSubjDesc" class="text-gray-800 text-sm">-</div>
+                    </div>
+                    <div>
+                        <div class="text-xs text-gray-500">Assigned Classes</div>
+                        <ul id="viewSubjClasses" class="list-disc list-inside text-sm text-gray-800"></ul>
+                    </div>
+                </div>
+                <div class="px-4 py-3 border-t flex items-center justify-end">
+                    <button type="button" id="btnCloseViewSubject2" class="px-3 py-2 rounded-lg border border-gray-200 text-gray-700 hover:bg-gray-50">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
         </div>
         <div class="border-t border-dashed mb-4"></div>
 
@@ -67,6 +98,14 @@
                         </td>
                         <td class="px-4 py-2">
                             <div class="flex items-center justify-end gap-2">
+                                <button type="button"
+                                    class="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded border text-gray-700 border-gray-300 hover:bg-gray-100 text-xs btnViewSubject"
+                                    data-name="{{ $subject->name }}"
+                                    data-description="{{ $subject->description }}"
+                                    data-classes='@json(($subject->classes ?? collect())->pluck("name"))'>
+                                    <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12Z"/><circle cx="12" cy="12" r="3"/></svg>
+                                    <span>View</span>
+                                </button>
                                 <button type="button"
                                     class="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded border text-indigo-700 border-indigo-300 hover:bg-indigo-50 text-xs btnEditSubject"
                                     data-id="{{ $subject->id }}"
@@ -323,7 +362,7 @@
         // Modals
         function open(el){ el?.classList.remove('hidden'); }
         function close(el){ el?.classList.add('hidden'); }
-        btnOpenAdd?.addEventListener('click', ()=> open(addModal));
+        btnOpenAdd?.addEventListener('click', ()=> { hideGlobalLoader?.(); open(addModal); });
         btnCloseAdd?.addEventListener('click', ()=> close(addModal));
         btnCancelAdd?.addEventListener('click', ()=> close(addModal));
         addModal?.addEventListener('click', (e)=>{ if(e.target===addModal) close(addModal); });
@@ -365,6 +404,7 @@
             btn.addEventListener('click', ()=>{
                 const id = btn.getAttribute('data-id');
                 const name = btn.getAttribute('data-name');
+                hideGlobalLoader?.();
                 openAssignClasses(id, name);
             });
         });
@@ -442,6 +482,7 @@
                 else { editIconName.value = iconRaw; editIconInput.value = ''; }
                 updateEditPreview();
                 editForm.action = `{{ url('learning/subjects') }}/${id}`;
+                hideGlobalLoader?.();
                 open(editModal);
             });
         });
@@ -471,12 +512,39 @@
         cModal?.addEventListener('click', (e)=>{ if(e.target===cModal) closeConfirm(); });
         cOk?.addEventListener('click', ()=>{ if(pendingForm){ pendingForm.submit(); closeConfirm(); } });
 
+        function hideGlobalLoader(){ try{ const gl=document.getElementById('globalPageLoader'); if(gl){ gl.classList.add('hidden'); gl.classList.remove('flex'); } }catch{} }
         document.querySelectorAll('form.js-confirm-delete').forEach(f => {
             f.addEventListener('submit', (e)=>{
                 e.preventDefault();
                 const title = f.getAttribute('data-confirm-title') || 'Confirm';
                 const msg = f.getAttribute('data-confirm-message') || 'Are you sure?';
-                openConfirm(title, msg, f);
+                hideGlobalLoader(); openConfirm(title, msg, f);
+            });
+        });
+
+        // View Subject logic
+        const vModal = document.getElementById('viewSubjectModal');
+        const vName = document.getElementById('viewSubjName');
+        const vDesc = document.getElementById('viewSubjDesc');
+        const vClasses = document.getElementById('viewSubjClasses');
+        const vClose1 = document.getElementById('btnCloseViewSubject');
+        const vClose2 = document.getElementById('btnCloseViewSubject2');
+        function openView(){ vModal?.classList.remove('hidden'); }
+        function closeView(){ vModal?.classList.add('hidden'); vClasses.innerHTML=''; }
+        vClose1?.addEventListener('click', closeView);
+        vClose2?.addEventListener('click', closeView);
+        vModal?.addEventListener('click', (e)=>{ if(e.target===vModal) closeView(); });
+        document.querySelectorAll('.btnViewSubject').forEach(btn => {
+            btn.addEventListener('click', ()=>{
+                const name = btn.getAttribute('data-name') || '-';
+                const desc = btn.getAttribute('data-description') || '-';
+                let cls = [];
+                try { cls = JSON.parse(btn.getAttribute('data-classes')||'[]'); } catch {}
+                vName.textContent = name;
+                vDesc.textContent = desc || '-';
+                vClasses.innerHTML = (Array.isArray(cls) && cls.length) ? cls.map(n=>`<li>${n}</li>`).join('') : '<li class="text-gray-400">None</li>';
+                hideGlobalLoader?.();
+                openView();
             });
         });
     })();

@@ -9,6 +9,7 @@ use App\Models\SchoolClass;
 use App\Models\Note;
 use App\Models\Category;
 use App\Models\Subcategory;
+use App\Models\SubSubcategory;
 use App\Models\Material;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -128,6 +129,61 @@ class ContentController extends Controller
                 'last_page' => $subcats->lastPage(),
                 'per_page' => $subcats->perPage(),
                 'total' => $subcats->total(),
+            ],
+        ]);
+    }
+
+    public function subsubcategories(Request $request)
+    {
+        $q = SubSubcategory::query()->with('subcategory:id,name');
+        
+        // Filter by subcategory_id if provided
+        if ($sid = $request->query('subcategory_id')) { 
+            $q->where('subcategory_id', $sid); 
+        }
+        
+        // Filter by category_id if provided (through subcategory relationship)
+        if ($cid = $request->query('category_id')) { 
+            $q->whereHas('subcategory', function($query) use ($cid) {
+                $query->where('category_id', $cid);
+            });
+        }
+        
+        // Filter by year if provided
+        if (($year = $request->query('year')) !== null && $year !== '') { 
+            $q->where('year', $year); 
+        }
+        
+        // Search by name if provided
+        if ($search = $request->query('q')) { 
+            $q->where('name','like',"%{$search}%"); 
+        }
+
+        // Get paginated results
+        $subsubcats = $q->orderBy('name')->paginate(50, ['id','name','subcategory_id','year','icon']);
+        
+        // Transform the data to include related subcategory information
+        $data = collect($subsubcats->items())->map(function ($ssc) {
+            return [
+                'id' => $ssc->id,
+                'name' => $ssc->name,
+                'subcategory_id' => $ssc->subcategory_id,
+                'year' => $ssc->year,
+                'icon' => $ssc->icon,
+                'subcategory' => $ssc->subcategory ? [
+                    'id' => $ssc->subcategory->id, 
+                    'name' => $ssc->subcategory->name
+                ] : null,
+            ];
+        });
+
+        return response()->json([
+            'data' => $data,
+            'pagination' => [
+                'current_page' => $subsubcats->currentPage(),
+                'last_page' => $subsubcats->lastPage(),
+                'per_page' => $subsubcats->perPage(),
+                'total' => $subsubcats->total(),
             ],
         ]);
     }

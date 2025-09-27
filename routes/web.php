@@ -11,15 +11,22 @@ if (env('INSTALLER_ENABLED', false)) {
 }
 
 Route::get('/', function () {
-    // Public landing page
-    $siteSettings = \App\Models\AdminSetting::first();
-    // Simple visitors counter using cache
-    if (!cache()->has('visitors_count')) {
-        cache()->forever('visitors_count', 0);
+    // Redirect to login page for unauthenticated users
+    return redirect()->route('login');
+})->middleware('guest');
+
+// Redirect authenticated users to appropriate dashboard
+Route::middleware('auth')->get('/home', function () {
+    $user = auth()->user();
+
+    // Check if user is admin and redirect accordingly
+    if ($user && method_exists($user, 'isAdmin') && $user->isAdmin()) {
+        return redirect()->route('dashboard');
     }
-    $visitorsCount = (int) cache()->increment('visitors_count');
-    return view('home', compact('siteSettings', 'visitorsCount'));
-});
+
+    // Redirect regular users to user dashboard
+    return redirect()->route('user.dashboard');
+})->name('home');
 
 Route::get('/dashboard', function () {
     return view('dashboard');
@@ -167,12 +174,7 @@ Route::middleware(['auth', 'verified', 'admin'])->group(function () {
 
     // Learning Materials
     Route::get('/materials', [\App\Http\Controllers\Admin\MaterialsController::class, 'index'])->name('materials.index');
-    // Categories
-    Route::get('/materials/categories', [\App\Http\Controllers\Admin\CategoriesController::class, 'index'])->name('materials.categories.index');
-    Route::get('/materials/categories/suggest', [\App\Http\Controllers\Admin\CategoriesController::class, 'suggest'])->name('materials.categories.suggest');
-    Route::post('/materials/categories', [\App\Http\Controllers\Admin\CategoriesController::class, 'store'])->name('materials.categories.store');
-    Route::put('/materials/categories/{category}', [\App\Http\Controllers\Admin\CategoriesController::class, 'update'])->name('materials.categories.update');
-    Route::delete('/materials/categories/{category}', [\App\Http\Controllers\Admin\CategoriesController::class, 'destroy'])->name('materials.categories.destroy');
+    // Categories (Material Level) routes removed (read-only module deprecated)
 
     // Subcategories
     Route::get('/materials/subcategories', [\App\Http\Controllers\Admin\SubcategoriesController::class, 'index'])->name('materials.subcategories.index');
@@ -181,16 +183,21 @@ Route::middleware(['auth', 'verified', 'admin'])->group(function () {
     Route::put('/materials/subcategories/{subcategory}', [\App\Http\Controllers\Admin\SubcategoriesController::class, 'update'])->name('materials.subcategories.update');
     Route::delete('/materials/subcategories/{subcategory}', [\App\Http\Controllers\Admin\SubcategoriesController::class, 'destroy'])->name('materials.subcategories.destroy');
 
-    // Sub Sub Categories
+    // Material Sub Type (Sub Subcategories)
     Route::get('/materials/subsubcategories', [\App\Http\Controllers\Admin\SubSubcategoriesController::class, 'index'])->name('materials.subsubcategories.index');
     Route::post('/materials/subsubcategories', [\App\Http\Controllers\Admin\SubSubcategoriesController::class, 'store'])->name('materials.subsubcategories.store');
     Route::put('/materials/subsubcategories/{subsubcategory}', [\App\Http\Controllers\Admin\SubSubcategoriesController::class, 'update'])->name('materials.subsubcategories.update');
     Route::delete('/materials/subsubcategories/{subsubcategory}', [\App\Http\Controllers\Admin\SubSubcategoriesController::class, 'destroy'])->name('materials.subsubcategories.destroy');
+    // Bulk actions by name
+    Route::put('/materials/subsubcategories/by-name/{name}', [\App\Http\Controllers\Admin\SubSubcategoriesController::class, 'updateByName'])->name('materials.subsubcategories.update_by_name');
+    Route::delete('/materials/subsubcategories/by-name/{name}', [\App\Http\Controllers\Admin\SubSubcategoriesController::class, 'destroyByName'])->name('materials.subsubcategories.destroy_by_name');
+    // Reset assigned materials for a specific sub subcategory
+    Route::post('/materials/subsubcategories/{subsubcategory}/reset-materials', [\App\Http\Controllers\Admin\SubSubcategoriesController::class, 'resetMaterials'])->name('materials.subsubcategories.reset_materials');
 
     // AJAX endpoints
     Route::get('/materials/suggest', [\App\Http\Controllers\Admin\MaterialsController::class, 'suggest'])->name('materials.suggest');
     Route::get('/materials/subcategories/json', [\App\Http\Controllers\Admin\MaterialsController::class, 'subcategories'])->name('materials.subcategories');
-    Route::get('/materials/subsubcategories/json', [\App\Http\Controllers\Admin\MaterialsController::class, 'subsubcategories'])->name('materials.subsubcategories');
+    Route::get('/materials/subsubcategories/by-type', [\App\Http\Controllers\Admin\MaterialsController::class, 'subsubcategoriesByType'])->name('materials.subsubcategories.by_type');
     // Materials CRUD
     Route::post('/materials', [\App\Http\Controllers\Admin\MaterialsController::class, 'store'])->name('materials.store');
     Route::put('/materials/{material}', [\App\Http\Controllers\Admin\MaterialsController::class, 'update'])->name('materials.update');
@@ -247,8 +254,8 @@ Route::middleware(['auth', 'verified', 'admin'])->group(function () {
 
             // Materials
             ['title' => 'All Materials', 'section' => 'Learning Materials', 'url' => route('materials.index')],
-            ['title' => 'Material Categories', 'section' => 'Learning Materials', 'url' => route('materials.categories.index')],
-            ['title' => 'Material Sub Categories', 'section' => 'Learning Materials', 'url' => route('materials.subcategories.index')],
+            ['title' => 'Material Type', 'section' => 'Learning Materials', 'url' => route('materials.subcategories.index')],
+            ['title' => 'Material Sub Type', 'section' => 'Learning Materials', 'url' => route('materials.subsubcategories.index')],
 
             // Mobile App
             ['title' => 'Notifications', 'section' => 'Mobile App', 'url' => route('mobile.notifications.index')],

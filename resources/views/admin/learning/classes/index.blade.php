@@ -6,6 +6,43 @@
                 <p class="text-sm text-gray-500">Manage classes and assign them to subjects.</p>
             </div>
 
+    <!-- View Class Modal -->
+    <div id="viewClassModal" class="fixed inset-0 bg-black/30 hidden z-[55]">
+        <div class="min-h-full w-full grid place-items-center p-4">
+            <div class="bg-white rounded-lg shadow max-w-lg w-full">
+                <div class="px-4 py-3 border-b flex items-center justify-between">
+                    <h3 class="font-semibold">View Class</h3>
+                    <button id="btnCloseViewClass" class="p-1 hover:bg-gray-100 rounded">
+                        <span class="material-symbols-outlined">close</span>
+                    </button>
+                </div>
+                <div class="p-4 space-y-3">
+                    <div>
+                        <div class="text-xs text-gray-500">Class</div>
+                        <div id="vcName" class="text-gray-900 font-medium">-</div>
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <div class="text-xs text-gray-500">Primary Subject</div>
+                            <div id="vcSubject" class="text-gray-900">-</div>
+                        </div>
+                        <div>
+                            <div class="text-xs text-gray-500">Assigned Subjects</div>
+                            <ul id="vcMulti" class="list-disc list-inside text-sm text-gray-800"></ul>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="text-xs text-gray-500">Description</div>
+                        <div id="vcDesc" class="text-gray-800 text-sm">-</div>
+                    </div>
+                </div>
+                <div class="px-4 py-3 border-t flex items-center justify-end">
+                    <button type="button" id="btnCloseViewClass2" class="px-3 py-2 rounded-lg border border-gray-200 text-gray-700 hover:bg-gray-50">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Assign Subjects Modal -->
     <div id="assignSubjectsModal" class="fixed inset-0 bg-black/30 hidden z-50">
         <div class="min-h-full w-full grid place-items-center p-4">
@@ -81,6 +118,16 @@
                             <td class="px-4 py-3 text-gray-500">{{ Str::limit($class->description, 120) }}</td>
                             <td class="px-4 py-3">
                                 <div class="flex items-center justify-end gap-2">
+                                    <button
+                                        class="btnViewClass inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-gray-200 text-gray-700 hover:bg-gray-50"
+                                        data-name="{{ $class->name }}"
+                                        data-subject="{{ $class->subject->name ?? '-' }}"
+                                        data-description="{{ $class->description }}"
+                                        data-multi='@json(($class->subjects ?? collect())->pluck("name"))'
+                                    >
+                                        <span class="material-symbols-outlined text-[18px]">visibility</span>
+                                        <span class="text-sm">View</span>
+                                    </button>
                                     <button
                                         class="btnAssignSubjects inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-gray-200 text-gray-700 hover:bg-gray-50"
                                         data-id="{{ $class->id }}"
@@ -331,7 +378,35 @@
         cModal?.addEventListener('click', (e)=>{ if(e.target===cModal) closeConfirm(); });
         cOk?.addEventListener('click', ()=>{ if(pendingForm){ pendingForm.submit(); closeConfirm(); } });
         document.querySelectorAll('form.js-confirm-delete').forEach(f => {
-            f.addEventListener('submit', (e)=>{ e.preventDefault(); const title = f.getAttribute('data-confirm-title') || 'Confirm'; const msg = f.getAttribute('data-confirm-message') || 'Are you sure?'; openConfirm(title, msg, f); });
+            f.addEventListener('submit', (e)=>{ e.preventDefault(); try{ const gl=document.getElementById('globalPageLoader'); if(gl){ gl.classList.add('hidden'); gl.classList.remove('flex'); } }catch{} const title = f.getAttribute('data-confirm-title') || 'Confirm'; const msg = f.getAttribute('data-confirm-message') || 'Are you sure?'; openConfirm(title, msg, f); });
+        });
+
+        // View class logic
+        const vModal = document.getElementById('viewClassModal');
+        const vName = document.getElementById('vcName');
+        const vSubject = document.getElementById('vcSubject');
+        const vDesc = document.getElementById('vcDesc');
+        const vMulti = document.getElementById('vcMulti');
+        const vClose1 = document.getElementById('btnCloseViewClass');
+        const vClose2 = document.getElementById('btnCloseViewClass2');
+        function openView(){ vModal?.classList.remove('hidden'); }
+        function closeView(){ vModal?.classList.add('hidden'); vMulti.innerHTML=''; }
+        vClose1?.addEventListener('click', closeView);
+        vClose2?.addEventListener('click', closeView);
+        vModal?.addEventListener('click', (e)=>{ if(e.target===vModal) closeView(); });
+        document.querySelectorAll('.btnViewClass').forEach(btn => {
+            btn.addEventListener('click', ()=>{
+                const name = btn.getAttribute('data-name') || '-';
+                const subject = btn.getAttribute('data-subject') || '-';
+                const desc = btn.getAttribute('data-description') || '-';
+                let multi = [];
+                try { multi = JSON.parse(btn.getAttribute('data-multi')||'[]'); } catch {}
+                vName.textContent = name;
+                vSubject.textContent = subject || '-';
+                vDesc.textContent = desc || '-';
+                vMulti.innerHTML = (Array.isArray(multi) && multi.length) ? multi.map(n=>`<li>${n}</li>`).join('') : '<li class="text-gray-400">None</li>';
+                openView();
+            });
         });
     })();
     </script>

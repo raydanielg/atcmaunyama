@@ -220,17 +220,13 @@
                                     <span class="material-symbols-outlined text-[20px]">inventory_2</span>
                                     <span>All Materials</span>
                                 </a>
-                                <a href="{{ route('materials.categories.index') }}" class="flex items-center gap-3 rounded-lg px-3 py-2 text-sm {{ request()->routeIs('materials.categories.*') ? 'bg-gray-100 text-gray-900' : 'text-gray-700 hover:bg-gray-50' }}">
-                                    <span class="material-symbols-outlined text-[20px]">category</span>
-                                    <span>Category</span>
-                                </a>
                                 <a href="{{ route('materials.subcategories.index') }}" class="flex items-center gap-3 rounded-lg px-3 py-2 text-sm {{ request()->routeIs('materials.subcategories.*') ? 'bg-gray-100 text-gray-900' : 'text-gray-700 hover:bg-gray-50' }}">
                                     <span class="material-symbols-outlined text-[20px]">subdirectory_arrow_right</span>
-                                    <span>Sub Category</span>
+                                    <span>Material Type</span>
                                 </a>
                                 <a href="{{ route('materials.subsubcategories.index') }}" class="flex items-center gap-3 rounded-lg px-3 py-2 text-sm {{ request()->routeIs('materials.subsubcategories.*') ? 'bg-gray-100 text-gray-900' : 'text-gray-700 hover:bg-gray-50' }}">
                                     <span class="material-symbols-outlined text-[20px]">subdirectory_arrow_right</span>
-                                    <span>Sub Sub Category</span>
+                                    <span>Material Sub Type</span>
                                 </a>
                             </div>
                         </div>

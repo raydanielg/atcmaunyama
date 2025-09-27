@@ -10,9 +10,11 @@ class Material extends Model
     protected $fillable = [
         'title',
         'slug',
-        'category_id',
         'subcategory_id',
         'sub_subcategory_id',
+        'level_id',
+        'subject_id',
+        'class_id',
         'path',
         'url',
         'mime',
@@ -20,23 +22,34 @@ class Material extends Model
         'user_id',
     ];
 
-    public function category(): BelongsTo
-    {
-        return $this->belongsTo(Category::class);
-    }
-
     public function subcategory(): BelongsTo
     {
         return $this->belongsTo(Subcategory::class);
     }
 
-    public function subSubcategory(): BelongsTo
-    {
-        return $this->belongsTo(SubSubcategory::class, 'sub_subcategory_id');
-    }
-
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    // Optional learning relations (nullable)
+    public function level(): BelongsTo
+    {
+        return $this->belongsTo(Level::class, 'level_id');
+    }
+
+    public function subject(): BelongsTo
+    {
+        return $this->belongsTo(Subject::class, 'subject_id');
+    }
+
+    public function class(): BelongsTo
+    {
+        return $this->belongsTo(SchoolClass::class, 'class_id');
+    }
+
+    public function subSubcategory(): BelongsTo
+    {
+        return $this->belongsTo(SubSubcategory::class, 'sub_subcategory_id');
     }
 }

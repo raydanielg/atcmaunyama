@@ -16,6 +16,16 @@ Route::middleware('api')->group(function () {
     Route::post('/auth/google', [GoogleController::class, 'exchange']);
     Route::middleware('auth:sanctum')->get('/auth/me', [UserController::class, 'me']);
 
+    // Public Materials Browsing API
+    Route::prefix('public/materials')->group(function(){
+        Route::get('/types', [\App\Http\Controllers\Api\MaterialsPublicController::class, 'types']);
+        Route::get('/subtypes', [\App\Http\Controllers\Api\MaterialsPublicController::class, 'subtypes']);
+        Route::get('/levels', [\App\Http\Controllers\Api\MaterialsPublicController::class, 'levels']);
+        Route::get('/classes', [\App\Http\Controllers\Api\MaterialsPublicController::class, 'classes']);
+        Route::get('/subjects', [\App\Http\Controllers\Api\MaterialsPublicController::class, 'subjects']);
+        Route::get('/', [\App\Http\Controllers\Api\MaterialsPublicController::class, 'materials']);
+    });
+
     // Regions
     Route::get('/mobile/regions', [RegionController::class, 'index']);
     Route::get('/regions', [RegionController::class, 'index']);
@@ -31,8 +41,7 @@ Route::middleware('api')->group(function () {
         return response()->json(['data' => $items]);
     });
 
-    // Materials taxonomy and lists
-    Route::get('/mobile/content/categories', [\App\Http\Controllers\Api\ContentController::class, 'categories']);
+    // Materials taxonomy and lists (Material Level removed)
     Route::get('/mobile/content/subcategories', [\App\Http\Controllers\Api\ContentController::class, 'subcategories']);
     Route::get('/mobile/content/materials', [\App\Http\Controllers\Api\ContentController::class, 'materials']);
 
