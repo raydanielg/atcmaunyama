@@ -35,7 +35,7 @@
                     <a href="{{ route('dashboard') }}" class="hidden md:flex items-center gap-2">
                         @php($__logo = '/logo.png')
                         <img src="{{ $__logo }}" alt="logo" class="h-8 w-8 rounded">
-                        <span class="text-base font-semibold leading-none">{{ $__admin->site_name ?? 'wazaelimu' }}</span>
+                        <span class="text-base font-semibold leading-none">{{ $__admin->site_name ?? 'ELMS-ATC' }}</span>
                     </a>
                 </div>
 
@@ -53,7 +53,7 @@
     @endif
                 <!-- Mobile centered title -->
                 <div class="md:hidden flex items-center justify-center">
-                    <span class="text-sm font-semibold text-gray-900 truncate">{{ $__admin->site_name ?? 'wazaelimu' }}</span>
+                    <span class="text-sm font-semibold text-gray-900 truncate">{{ $__admin->site_name ?? 'ELMS-ATC' }}</span>
                 </div>
                 <div class="hidden md:flex items-center">
                     <div class="relative w-full max-w-md" id="menuSearchRoot">

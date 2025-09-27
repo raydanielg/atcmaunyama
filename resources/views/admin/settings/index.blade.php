@@ -30,7 +30,7 @@
                     <div class="mt-3 grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
                             <label class="block text-sm text-gray-700">Site Name</label>
-                            <input type="text" name="site_name" value="{{ old('site_name', $settings->site_name ?? '') }}" class="mt-1 w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" placeholder="wazaelimu" />
+                            <input type="text" name="site_name" value="{{ old('site_name', $settings->site_name ?? '') }}" class="mt-1 w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" placeholder="ELMS-ATC" />
                         </div>
                         <div>
                             <label class="block text-sm text-gray-700">Site URL</label>
@@ -42,7 +42,7 @@
                         </div>
                         <div>
                             <label class="block text-sm text-gray-700">Footer Text</label>
-                            <input type="text" name="footer_text" value="{{ old('footer_text', $settings->footer_text ?? '© ' . date('Y') . ' wazaelimu') }}" class="mt-1 w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" />
+                            <input type="text" name="footer_text" value="{{ old('footer_text', $settings->footer_text ?? '© ' . date('Y') . ' ELMS-ATC') }}" class="mt-1 w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" />
                         </div>
                     </div>
                 </div>
