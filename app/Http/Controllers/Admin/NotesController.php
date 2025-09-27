@@ -149,4 +149,25 @@ class NotesController extends Controller
         $semisters = Semister::active()->orderBy('start_date', 'desc')->get(['id', 'name']);
         return response()->json($semisters);
     }
+    
+    /**
+     * Get classes for the selected level
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function classes(Request $request)
+    {
+        $levelId = $request->query('level_id');
+        
+        if (!$levelId) {
+            return response()->json([]);
+        }
+        
+        $classes = SchoolClass::where('level_id', $levelId)
+            ->orderBy('name')
+            ->get(['id', 'name']);
+            
+        return response()->json($classes);
+    }
 }
