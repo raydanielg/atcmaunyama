@@ -32,6 +32,8 @@ Route::middleware('api')->group(function () {
         Route::get('/', [\App\Http\Controllers\Api\BlogController::class, 'index']);
         // Detail by slug
         Route::get('/{slug}', [\App\Http\Controllers\Api\BlogController::class, 'show']);
+        // Image (hero) by slug
+        Route::get('/{slug}/image', [\App\Http\Controllers\Api\BlogController::class, 'image']);
         // Optional detail by id for convenience
         Route::get('/id/{id}', [\App\Http\Controllers\Api\BlogController::class, 'showById']);
         // Comments (public; user_id optional)

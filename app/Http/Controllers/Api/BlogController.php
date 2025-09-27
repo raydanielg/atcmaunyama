@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\BlogPost;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 
 class BlogController extends Controller
 {
@@ -179,5 +180,22 @@ class BlogController extends Controller
         $liked = $post->reactions()->where('type','like')->count();
         $disliked = $post->reactions()->where('type','dislike')->count();
         return response()->json(['ok'=>true,'liked'=>$liked,'disliked'=>$disliked]);
+    }
+
+    // GET /api/public/blog/{slug}/image - streams the post hero image (if any)
+    public function image(string $slug)
+    {
+        $post = BlogPost::where('slug', $slug)->firstOrFail();
+        if (!$post->image_path) {
+            abort(404);
+        }
+        $disk = Storage::disk('public');
+        if (!$disk->exists($post->image_path)) {
+            abort(404);
+        }
+        // Use the original filename if present in path; otherwise default name
+        $basename = basename($post->image_path);
+        $filename = $basename ?: (str_replace(' ', '-', strtolower($post->title)).'.jpg');
+        return $disk->response($post->image_path, $filename);
     }
 }
