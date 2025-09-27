@@ -19,17 +19,28 @@ return new class extends Migration
                 try { $table->dropForeign(['sub_subcategory_id']); } catch (\Throwable $e) {}
                 try { $table->dropForeign(['category_id']); } catch (\Throwable $e) {}
 
-                // Also try dropping by constraint name directly
-                try { DB::statement("ALTER TABLE materials DROP FOREIGN KEY materials_sub_subcategory_id_foreign"); } catch (\Throwable $e) {}
-                try { DB::statement("ALTER TABLE materials DROP FOREIGN KEY materials_category_id_foreign"); } catch (\Throwable $e) {}
+                // Also try dropping by constraint name directly (check if exists first)
+                try {
+                    // Try a simple approach - just attempt to drop and catch if it doesn't exist
+                    DB::statement("ALTER TABLE materials DROP FOREIGN KEY materials_sub_subcategory_id_foreign");
+                } catch (\Illuminate\Database\QueryException $e) {
+                    // Constraint doesn't exist, which is fine
+                    if ($e->getCode() != '42000' || !str_contains($e->getMessage(), "check that column/key exists")) {
+                        throw $e; // Re-throw if it's a different error
+                    }
+                } catch (\Throwable $e) {
+                    // Other errors are also acceptable (constraint might not exist)
+                }
 
-                // Try alternative constraint names that Laravel might generate
-                try { DB::statement("ALTER TABLE materials DROP FOREIGN KEY IF EXISTS materials_sub_subcategory_id_foreign"); } catch (\Throwable $e) {}
-                try { DB::statement("ALTER TABLE materials DROP FOREIGN KEY IF EXISTS materials_category_id_foreign"); } catch (\Throwable $e) {}
-
-                // Try dropping by index name as well
-                try { DB::statement("ALTER TABLE materials DROP INDEX IF EXISTS materials_sub_subcategory_id_foreign"); } catch (\Throwable $e) {}
-                try { DB::statement("ALTER TABLE materials DROP INDEX IF EXISTS materials_category_id_foreign"); } catch (\Throwable $e) {}
+                try {
+                    DB::statement("ALTER TABLE materials DROP FOREIGN KEY materials_category_id_foreign");
+                } catch (\Illuminate\Database\QueryException $e) {
+                    if ($e->getCode() != '42000' || !str_contains($e->getMessage(), "check that column/key exists")) {
+                        throw $e;
+                    }
+                } catch (\Throwable $e) {
+                    // Other errors are also acceptable
+                }
 
                 // SQLite requires dropping indexes before columns; do it via raw just in case
                 try { DB::statement('DROP INDEX IF EXISTS materials_category_id_index'); } catch (\Throwable $e) {}
