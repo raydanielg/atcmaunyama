@@ -222,6 +222,11 @@ Route::middleware(['auth', 'verified', 'admin'])->group(function () {
     Route::get('/settings/backup', [\App\Http\Controllers\Admin\AdminSettingsController::class, 'backup'])->name('settings.backup');
     Route::post('/settings/test-mail', [\App\Http\Controllers\Admin\AdminSettingsController::class, 'testMail'])->name('settings.test_mail');
 
+    // Admin Profile (restored)
+    Route::get('/admin/profile', [\App\Http\Controllers\Admin\AdminProfileController::class, 'index'])->name('admin.profile.index');
+    Route::post('/admin/profile', [\App\Http\Controllers\Admin\AdminProfileController::class, 'update'])->name('admin.profile.update');
+    Route::post('/admin/profile/password', [\App\Http\Controllers\Admin\AdminProfileController::class, 'updatePassword'])->name('admin.profile.password');
+
     // Semesters
     Route::get('/semesters', [\App\Http\Controllers\Admin\SemisterController::class, 'index'])->name('admin.semisters.index');
     Route::get('/semesters/create', [\App\Http\Controllers\Admin\SemisterController::class, 'create'])->name('admin.semisters.create');
