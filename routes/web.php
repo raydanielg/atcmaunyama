@@ -15,6 +15,10 @@ Route::get('/', function () {
     return redirect()->route('login');
 })->middleware('guest');
 
+// Public Blog pages
+Route::get('/blog', [\App\Http\Controllers\BlogPublicController::class, 'index'])->name('blog.index');
+Route::get('/blog/{slug}', [\App\Http\Controllers\BlogPublicController::class, 'show'])->name('blog.show');
+
 // Redirect authenticated users to appropriate dashboard
 Route::middleware('auth')->get('/home', function () {
     $user = auth()->user();
