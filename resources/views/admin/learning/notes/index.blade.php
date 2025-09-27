@@ -2,8 +2,8 @@
     <div class="py-4">
         <div class="flex items-center justify-between gap-4">
             <div>
-                <h1 class="text-xl font-semibold text-gray-900">ALL NOTES</h1>
-                <p class="text-sm text-gray-500 mt-1">Manage all notes in the system.</p>
+                <h1 class="text-xl font-semibold text-gray-900">COURSE NOTES</h1>
+                <p class="text-sm text-gray-500 mt-1">Manage notes for different courses, classes, and subjects.</p>
             </div>
         </div>
 
@@ -67,16 +67,16 @@
                             <input type="text" id="editNoteTitle" name="title" class="mt-1 w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" required />
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-700">Level of Education</label>
+                            <label class="block text-sm font-medium text-gray-700">Course</label>
                             <select name="level_id" id="editLevelSelect" class="mt-1 w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
-                                <option value="">Loading levels...</option>
+                                <option value="">Loading courses...</option>
                             </select>
                         </div>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
                                 <label class="block text-sm font-medium text-gray-700">Subject</label>
                                 <select name="subject_id" id="editSubjectSelect" class="mt-1 w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" disabled>
-                                    <option value="">Select level first...</option>
+                                    <option value="">Select course first...</option>
                                 </select>
                             </div>
                             <div>
@@ -499,16 +499,16 @@
         function closeE(){ eModal?.classList.add('hidden'); }
 
         async function loadLevels(target, selected=null){
-            if (!target) return; target.disabled=true; target.innerHTML='<option value="">Loading levels...</option>';
+            if (!target) return; target.disabled=true; target.innerHTML='<option value="">Loading courses...</option>';
             try{ const data = await fetchJSON(`{{ route('learning.notes.levels') }}`);
-                target.innerHTML = '<option value="">Select level...</option>' + (Array.isArray(data)?data:[]).map(l=>`<option value="${l.id}">${l.name}</option>`).join('');
+                target.innerHTML = '<option value="">Select course...</option>' + (Array.isArray(data)?data:[]).map(l=>`<option value="${l.id}">${l.name}</option>`).join('');
                 if (selected) target.value = String(selected);
-            }catch{ target.innerHTML='<option value="">Failed to load levels</option>'; }
+            }catch{ target.innerHTML='<option value="">Failed to load courses</option>'; }
             finally{ target.disabled=false; }
         }
         async function loadClasses(target, levelId, selected=null){
             if (!target) return; target.disabled=true; target.innerHTML='<option value="">Loading classes...</option>';
-            if (!levelId){ target.innerHTML='<option value="">Select level first...</option>'; return; }
+            if (!levelId){ target.innerHTML='<option value="">Select course first...</option>'; return; }
             try{ const data = await fetchJSON(`{{ route('learning.notes.classes') }}?level_id=${encodeURIComponent(levelId)}`);
                 target.innerHTML = '<option value="">Select class...</option>' + (Array.isArray(data)?data:[]).map(c=>`<option value="${c.id}">${c.name}</option>`).join('');
                 if (selected) target.value = String(selected);
