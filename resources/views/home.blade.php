@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>{{ config('app.name', 'wazaelimu') }} - Home</title>
+    <title>{{ config('app.name', 'ELMS-ATC') }} - Home</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="/css/custom.css">
     <link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}" />
@@ -17,7 +17,7 @@
             @php
                 // Explicit hotline & email per request
                 $phone = '255716212896';
-                $email = 'info@wazaelimu.co.tz';
+                $email = 'info@elms-atc.co.tz';
             @endphp
             <!-- Left: Phone and Email -->
             <div class="flex items-center gap-4 sm:gap-6">

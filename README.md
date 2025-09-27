@@ -19,23 +19,23 @@ php artisan db:seed
 Sample accounts:
 
 - Admin (allowed to login)
-  - Email: `admin@wazaelimu.tld`
+  - Email: `admin@elms-atc.tld`
   - Password: `Admin@12345`
   - Role: `admin`
 
 - Standard User (not allowed to login yet)
-  - Email: `user@wazaelimu.tld`
+  - Email: `user@elms-atc.tld`
   - Password: `User@12345`
   - Role: `user`
 
 - Super Administrator (not allowed to login yet)
-  - Email: `super@wazaelimu.tld`
+  - Email: `super@elms-atc.tld`
   - Password: `Super@12345`
   - Role: `super_admin`
 
 ### Notes
 
-- To change the app/site name, set `APP_NAME="wazaelimu"` in `.env` and run `php artisan config:clear`.
+- To change the app/site name, set `APP_NAME="ELMS-ATC"` in `.env` and run `php artisan config:clear`.
 - Ensure branding files exist: `public/logo.png` and `public/favicon.ico`.
 - For production cookie security, configure `.env`: `SESSION_SECURE_COOKIE=true`, `SESSION_HTTP_ONLY=true`, `SESSION_SAME_SITE=lax` and set `APP_ENV=production`, `APP_DEBUG=false`.
 

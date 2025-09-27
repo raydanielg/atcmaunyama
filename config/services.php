@@ -57,7 +57,7 @@ return [
     'mobile_app' => [
         'play_store_url' => env('MOBILE_PLAY_STORE_URL', 'https://play.google.com/store/apps/details?id=com.example.app'),
         'android_package' => env('MOBILE_ANDROID_PACKAGE', 'com.example.app'),
-        'deeplink_scheme' => env('MOBILE_DEEPLINK_SCHEME', 'wazaelimu'),
+        'deeplink_scheme' => env('MOBILE_DEEPLINK_SCHEME', 'elms-atc'),
     ],
 
 ];

@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>{{ config('app.name', 'wazaelimu') }} - Frequently Asked Questions (FAQ)</title>
+    <title>{{ config('app.name', 'ELMS-ATC') }} - Frequently Asked Questions (FAQ)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="/css/custom.css">
     <link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}" />

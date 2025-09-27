@@ -47,7 +47,7 @@
         </div>
 
         <div class="mt-6 border-t border-gray-200/70 pt-3 flex flex-col sm:flex-row items-center justify-between text-xs sm:text-sm text-gray-600">
-            <div>&copy; {{ date('Y') }} Wazaelimu. All rights reserved.</div>
+            <div>&copy; {{ date('Y') }} ELMS-ATC. All rights reserved.</div>
             <div class="mt-2 sm:mt-0 space-x-4">
                 <a href="{{ url('/') }}#features" class="hover:underline">Features</a>
                 <a href="{{ url('/') }}#why" class="hover:underline">Why</a>

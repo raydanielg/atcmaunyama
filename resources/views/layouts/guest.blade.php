@@ -6,18 +6,18 @@
         <meta name="csrf-token" content="{{ csrf_token() }}">
 
         @php($__admin = \App\Models\AdminSetting::query()->first())
-        @php($__siteTitle = $__admin->site_name ?? config('app.name', 'wazaelimu'))
+        @php($__siteTitle = $__admin->site_name ?? config('app.name', 'ELMS-ATC'))
         @php($__siteUrl = $__admin->site_url ?? config('app.url'))
         @php($__favicon = '/favicon.ico')
         @php($__logo = '/logo.png')
         @php($__meta = (array) ($__admin->meta ?? []))
-        @php($__desc = $__meta['description'] ?? 'Sign in to access the WazaElimu admin panel and dashboard.')
-        @php($__keywords = $__meta['keywords'] ?? 'education, admin, dashboard, wazaelimu, learning')
+        @php($__desc = $__meta['description'] ?? 'Sign in to access the ELMS-ATC admin panel and dashboard.')
+        @php($__keywords = $__meta['keywords'] ?? 'education, admin, dashboard, elms-atc, learning')
 
         <title>{{ $__siteTitle }} — {{ $__meta['title_suffix'] ?? 'Login' }}</title>
         <meta name="description" content="{{ $__desc }}">
         <meta name="keywords" content="{{ $__keywords }}">
-        <meta name="author" content="{{ $__admin->contact_email ?? 'admin@wazaelimu' }}">
+        <meta name="author" content="{{ $__admin->contact_email ?? 'admin@elms-atc' }}">
         <meta name="robots" content="index,follow">
         <link rel="canonical" href="{{ request()->url() }}">
         <meta name="theme-color" content="#111827">

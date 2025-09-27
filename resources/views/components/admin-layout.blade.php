@@ -6,7 +6,7 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
     @php($__admin = \App\Models\AdminSetting::query()->first())
-    <title>{{ $__admin->site_name ?? config('app.name', 'wazaelimu') }} — Admin</title>
+    <title>{{ $__admin->site_name ?? config('app.name', 'ELMS-ATC') }} — Admin</title>
     @php($__favicon = '/favicon.ico')
     <link rel="icon" type="image/x-icon" href="{{ $__favicon }}">
 

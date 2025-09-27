@@ -3,7 +3,7 @@
     <div class="flex flex-wrap justify-between items-center mx-auto max-w-screen-xl text-white px-3 py-2 sm:px-4">
         @php
             $phone = '255716212896';
-            $email = 'info@wazaelimu.co.tz';
+            $email = 'info@elms-atc.co.tz';
         @endphp
         <div class="flex items-center gap-4 sm:gap-6">
             <a href="tel:{{ $phone }}" class="inline-flex items-center gap-2 text-sm sm:text-base font-medium hover:underline">
