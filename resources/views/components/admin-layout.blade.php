@@ -240,6 +240,10 @@
                                     <span class="material-symbols-outlined text-[20px]">article</span>
                                     <span>Blog</span>
                                 </a>
+                                <a href="{{ route('cms.blog.comments.index') }}" class="flex items-center gap-3 rounded-lg px-3 py-2 text-sm {{ request()->routeIs('cms.blog.comments.*') ? 'bg-gray-100 text-gray-900' : 'text-gray-700 hover:bg-gray-50' }}">
+                                    <span class="material-symbols-outlined text-[20px]">forum</span>
+                                    <span>Comments</span>
+                                </a>
                             </div>
                         </div>
                         <!-- Academic -->

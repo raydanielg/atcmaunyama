@@ -39,7 +39,9 @@ class BlogController extends Controller
     {
         $post = BlogPost::query()
             ->where('slug', $slug)
-            ->with(['comments' => function($q){ $q->latest('id'); }])
+            ->with(['comments' => function($q){
+                $q->whereNull('parent_id')->orderBy('id','desc');
+            }, 'comments.replies' => function($q){ $q->orderBy('id','asc'); }, 'comments.user', 'comments.replies.user'])
             ->firstOrFail();
 
         // Optionally increment views
@@ -56,11 +58,25 @@ class BlogController extends Controller
             'dislikes' => $post->reactions()->where('type','dislike')->count(),
             'created_at' => $post->created_at?->toIso8601String(),
             'comments' => $post->comments->map(function($c){
+                $isAdmin = $c->user ? (method_exists($c->user, 'isAdmin') ? (bool)$c->user->isAdmin() : false) : false;
                 return [
                     'id' => $c->id,
                     'author' => $c->user?->name ?? $c->author_name ?? 'Anonymous',
+                    'email' => $c->user?->email ?? $c->email,
+                    'is_admin' => $isAdmin,
                     'content' => $c->content,
                     'created_at' => $c->created_at?->toIso8601String(),
+                    'replies' => $c->replies->map(function($r){
+                        $isAdminR = $r->user ? (method_exists($r->user, 'isAdmin') ? (bool)$r->user->isAdmin() : false) : false;
+                        return [
+                            'id' => $r->id,
+                            'author' => $r->user?->name ?? $r->author_name ?? 'Anonymous',
+                            'email' => $r->user?->email ?? $r->email,
+                            'is_admin' => $isAdminR,
+                            'content' => $r->content,
+                            'created_at' => $r->created_at?->toIso8601String(),
+                        ];
+                    }),
                 ];
             }),
         ]);
@@ -69,7 +85,11 @@ class BlogController extends Controller
     // GET /api/public/blog/id/{id}
     public function showById(Request $request, int $id)
     {
-        $post = BlogPost::with(['comments' => function($q){ $q->latest('id'); }])->findOrFail($id);
+        $post = BlogPost::query()
+            ->with(['comments' => function($q){
+                $q->whereNull('parent_id')->orderBy('id','desc');
+            }, 'comments.replies' => function($q){ $q->orderBy('id','asc'); }, 'comments.user', 'comments.replies.user'])
+            ->findOrFail($id);
         $post->increment('views');
         return response()->json([
             'id' => $post->id,
@@ -85,8 +105,18 @@ class BlogController extends Controller
                 return [
                     'id' => $c->id,
                     'author' => $c->user?->name ?? $c->author_name ?? 'Anonymous',
+                    'email' => $c->user?->email ?? $c->email,
                     'content' => $c->content,
                     'created_at' => $c->created_at?->toIso8601String(),
+                    'replies' => $c->replies->map(function($r){
+                        return [
+                            'id' => $r->id,
+                            'author' => $r->user?->name ?? $r->author_name ?? 'Anonymous',
+                            'email' => $r->user?->email ?? $r->email,
+                            'content' => $r->content,
+                            'created_at' => $r->created_at?->toIso8601String(),
+                        ];
+                    }),
                 ];
             }),
         ]);
@@ -99,17 +129,22 @@ class BlogController extends Controller
         $data = $request->validate([
             'content' => ['required','string','max:2000'],
             'author_name' => ['nullable','string','max:100'],
+            'email' => ['nullable','email','max:255'],
+            'parent_id' => ['nullable','integer','exists:blog_comments,id'],
         ]);
         $comment = $post->comments()->create([
             'user_id' => auth('sanctum')->id(),
             'author_name' => $data['author_name'] ?? null,
+            'email' => $data['email'] ?? null,
             'content' => $data['content'],
+            'parent_id' => $data['parent_id'] ?? null,
         ]);
         return response()->json([
             'ok' => true,
             'comment' => [
                 'id' => $comment->id,
                 'author' => $comment->user?->name ?? $comment->author_name ?? 'Anonymous',
+                'email' => $comment->user?->email ?? $comment->email,
                 'content' => $comment->content,
                 'created_at' => $comment->created_at?->toIso8601String(),
             ],

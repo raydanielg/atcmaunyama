@@ -250,6 +250,12 @@ Route::middleware(['auth', 'verified', 'admin'])->group(function () {
         Route::get('/posts/{post}/edit', [\App\Http\Controllers\Admin\BlogPostsController::class, 'edit'])->name('posts.edit');
         Route::put('/posts/{post}', [\App\Http\Controllers\Admin\BlogPostsController::class, 'update'])->name('posts.update');
         Route::delete('/posts/{post}', [\App\Http\Controllers\Admin\BlogPostsController::class, 'destroy'])->name('posts.destroy');
+
+        // Comments management
+        Route::get('/comments', [\App\Http\Controllers\Admin\BlogCommentsController::class, 'index'])->name('comments.index');
+        Route::get('/comments/{comment}', [\App\Http\Controllers\Admin\BlogCommentsController::class, 'show'])->name('comments.show');
+        Route::post('/comments/{comment}/reply', [\App\Http\Controllers\Admin\BlogCommentsController::class, 'reply'])->name('comments.reply');
+        Route::delete('/comments/{comment}', [\App\Http\Controllers\Admin\BlogCommentsController::class, 'destroy'])->name('comments.destroy');
     });
 
     

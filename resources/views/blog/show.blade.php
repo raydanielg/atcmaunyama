@@ -56,6 +56,10 @@
                     <input type="text" id="authorName" class="mt-1 w-full border rounded-lg px-3 py-2 text-sm" placeholder="e.g. John Doe" />
                 </div>
                 <div>
+                    <label class="block text-sm text-gray-700">Email (optional)</label>
+                    <input type="email" id="authorEmail" class="mt-1 w-full border rounded-lg px-3 py-2 text-sm" placeholder="e.g. john@example.com" />
+                </div>
+                <div>
                     <label class="block text-sm text-gray-700">Comment</label>
                     <textarea id="commentBody" rows="3" class="mt-1 w-full border rounded-lg px-3 py-2 text-sm" required></textarea>
                 </div>
@@ -93,28 +97,47 @@
 
     function renderComments(items){
         commentsList.innerHTML = '';
-        if(!items.length){
             commentsList.innerHTML = '<div class="text-sm text-gray-500">No comments yet. Be the first to comment.</div>';
             return;
         }
         const frag = document.createDocumentFragment();
         items.forEach(it => {
-            const div = document.createElement('div');
-            div.className = 'p-3 border rounded-lg';
-            div.innerHTML = `<div class="text-sm text-gray-900 font-medium">${escapeHtml(it.author || 'Anonymous')}</div>
-                             <div class="text-sm text-gray-700 mt-1">${escapeHtml(it.content)}</div>
-                             <div class="text-xs text-gray-400 mt-1">${it.created_at ? new Date(it.created_at).toLocaleString() : ''}</div>`;
-            frag.appendChild(div);
+            frag.appendChild(renderCommentNode(it));
         });
         commentsList.appendChild(frag);
+
+    function renderCommentNode(c){
+        const wrap = document.createElement('div');
+        wrap.className = 'p-3 border rounded-lg';
+        const author = escapeHtml(c.author || 'Anonymous');
+        const email = c.email ? ` <span class=\"text-xs text-gray-400\">(${escapeHtml(c.email)})</span>` : '';
+        const adminBadge = c.is_admin ? ` <span class=\"text-[10px] px-2 py-0.5 rounded-full bg-blue-100 text-blue-700 border border-blue-200\">Admin</span>` : '';
+        wrap.innerHTML = `<div class=\"text-sm text-gray-900 font-medium flex items-center gap-2\">${author}${email}${adminBadge}</div>
+                          <div class=\"text-sm text-gray-700 mt-1\">${escapeHtml(c.content)}</div>
+                          <div class=\"text-xs text-gray-400 mt-1\">${c.created_at ? new Date(c.created_at).toLocaleString() : ''}</div>
+                          <button class=\"mt-2 text-xs text-indigo-600 hover:underline\" data-reply>Reply</button>
+                          <div class=\"mt-3 hidden\" data-reply-form>
+                              <div class=\"grid grid-cols-1 md:grid-cols-2 gap-2\">
+{{ ... }}
     }
 
-    function escapeHtml(s){
+    function renderCommentChild(r){
+        const div = document.createElement('div');
+        const author = escapeHtml(r.author || 'Anonymous');
+        const email = r.email ? ` <span class=\"text-xs text-gray-400\">(${escapeHtml(r.email)})</span>` : '';
+        const adminBadge = r.is_admin ? ` <span class=\"text-[10px] px-2 py-0.5 rounded-full bg-blue-100 text-blue-700 border border-blue-200\">Admin</span>` : '';
+        div.className = 'p-3 border rounded-lg bg-gray-50';
+        div.innerHTML = `<div class=\"text-sm text-gray-900 font-medium flex items-center gap-2\">${author}${email}${adminBadge}</div>
+                         <div class=\"text-sm text-gray-700 mt-1\">${escapeHtml(r.content)}</div>
+                         <div class=\"text-xs text-gray-400 mt-1\">${r.created_at ? new Date(r.created_at).toLocaleString() : ''}</div>`;
+        return div;
+    }
+
         return (s||'').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
     }
 
     async function react(type){
-        reactStatus.textContent = 'Saving...';
+{{ ... }}
         try{
             const res = await fetch(`${apiBase}/${encodeURIComponent(slug)}/react`, {
                 method: 'POST',
@@ -134,6 +157,7 @@
     async function submitComment(e){
         e.preventDefault();
         const author_name = document.getElementById('authorName').value.trim();
+        const email = document.getElementById('authorEmail').value.trim();
         const content = document.getElementById('commentBody').value.trim();
         if(!content){ return; }
         commentStatus.textContent = 'Posting...';
@@ -141,7 +165,7 @@
             const res = await fetch(`${apiBase}/${encodeURIComponent(slug)}/comments`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-                body: JSON.stringify({ content, author_name })
+                body: JSON.stringify({ content, author_name, email })
             });
             if(!res.ok){ commentStatus.textContent = 'Failed to post comment.'; return; }
             const data = await res.json();

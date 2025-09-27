@@ -11,7 +11,7 @@ class BlogComment extends Model
     use HasFactory;
 
     protected $fillable = [
-        'post_id','user_id','author_name','content',
+        'post_id','user_id','author_name','email','content','parent_id',
     ];
 
     public function post(): BelongsTo
@@ -22,5 +22,15 @@ class BlogComment extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function parent(): BelongsTo
+    {
+        return $this->belongsTo(BlogComment::class, 'parent_id');
+    }
+
+    public function replies()
+    {
+        return $this->hasMany(BlogComment::class, 'parent_id')->orderBy('id','asc');
     }
 }
