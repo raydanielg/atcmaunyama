@@ -373,4 +373,35 @@ class ContentController extends Controller
             'extraSubjects' => $extras,
         ]);
     }
+
+    /**
+     * Mobile flow helper: subjects available for a given class and semister, based on notes presence.
+     * Params: class_id (required), semister_id (required), level_id (optional)
+     * Returns distinct subjects that have at least one note matching filters.
+     */
+    public function subjectsForClassSemister(Request $request)
+    {
+        $classId = (int) $request->query('class_id');
+        $semId = (int) $request->query('semister_id');
+        $levelId = $request->query('level_id');
+        if (!$classId || !$semId) {
+            return response()->json([
+                'message' => 'class_id and semister_id are required',
+                'data' => []
+            ], 422);
+        }
+
+        $q = Note::query()
+            ->where('class_id', $classId)
+            ->where('semister_id', $semId)
+            ->when($levelId, fn($qq) => $qq->where('level_id', $levelId))
+            ->whereNotNull('subject_id')
+            ->join('subjects', 'subjects.id', '=', 'notes.subject_id')
+            ->select('subjects.id','subjects.name')
+            ->distinct()
+            ->orderBy('subjects.name');
+
+        $subjects = $q->get();
+        return response()->json(['data' => $subjects]);
+    }
 }
