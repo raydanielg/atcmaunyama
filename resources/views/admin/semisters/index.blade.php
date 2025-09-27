@@ -5,11 +5,37 @@
                 <h1 class="text-xl font-semibold text-gray-900">Semesters</h1>
                 <p class="text-sm text-gray-500">Manage academic semesters and their associated notes.</p>
             </div>
-            <a href="{{ route('admin.semisters.create') }}" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2">
+            <button type="button" onclick="window.__openCreateSemister()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2">
                 <span class="material-symbols-outlined">add</span>
                 Add Semester
-            </a>
+            </button>
         </div>
+
+    <!-- Create Semester Modal (Name only) -->
+    <div id="createSemisterModal" class="fixed inset-0 z-[70] hidden">
+        <div class="absolute inset-0 bg-black/40" onclick="window.__closeCreateSemister()"></div>
+        <div class="relative min-h-full w-full grid place-items-center p-4">
+            <div class="bg-white w-full max-w-md rounded-xl shadow-lg overflow-hidden">
+                <div class="px-4 py-3 border-b flex items-center justify-between">
+                    <h3 class="font-semibold text-gray-900">Add Semester</h3>
+                    <button type="button" class="p-1 rounded hover:bg-gray-100" onclick="window.__closeCreateSemister()">
+                        <span class="material-symbols-outlined">close</span>
+                    </button>
+                </div>
+                <form method="POST" action="{{ route('admin.semisters.store') }}" class="p-4 space-y-3">
+                    @csrf
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Semester Name</label>
+                        <input type="text" name="name" class="mt-1 w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" placeholder="e.g., Semester I 2025" required />
+                    </div>
+                    <div class="pt-2 flex items-center justify-end gap-2">
+                        <button type="button" class="px-3 py-2 rounded-lg border border-gray-200 text-gray-700 hover:bg-gray-50" onclick="window.__closeCreateSemister()">Cancel</button>
+                        <button type="submit" class="px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white">Create</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
 
         <div class="mt-2 font-mono text-[11px] tracking-widest text-gray-400 select-none" aria-hidden="true">- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -</div>
 
@@ -113,6 +139,15 @@
     </div>
 
     <script>
+        window.__openCreateSemister = function(){
+            const m = document.getElementById('createSemisterModal');
+            if (m) m.classList.remove('hidden');
+        };
+        window.__closeCreateSemister = function(){
+            const m = document.getElementById('createSemisterModal');
+            if (m) m.classList.add('hidden');
+        };
+
         window.__toggleStatus = function(id) {
             const form = document.createElement('form');
             form.method = 'POST';

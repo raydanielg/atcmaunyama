@@ -33,13 +33,19 @@ class SemisterController extends Controller
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'start_date' => 'required|date',
-            'end_date' => 'required|date|after:start_date',
-            'is_active' => 'boolean',
-            'description' => 'nullable|string'
         ]);
 
-        Semister::create($validated);
+        // Auto-fill sensible defaults so user only types the name
+        $today = now()->startOfDay();
+        $defaultEnd = (clone $today)->addMonths(4); // 4 months as a default window
+
+        Semister::create([
+            'name' => $validated['name'],
+            'start_date' => $today->toDateString(),
+            'end_date' => $defaultEnd->toDateString(),
+            'is_active' => true,
+            'description' => null,
+        ]);
 
         return redirect()->route('admin.semisters.index')
             ->with('success', 'Semester created successfully.');
