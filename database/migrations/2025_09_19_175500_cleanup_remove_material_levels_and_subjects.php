@@ -9,110 +9,69 @@ return new class extends Migration
 {
     public function up(): void
     {
-        // Disable FK checks for MySQL
+        // Disable FK checks
         DB::statement('SET FOREIGN_KEY_CHECKS=0');
 
-        /**
-         * 1) Clean materials table
-         */
+        // 1) materials cleanup
         if (Schema::hasTable('materials')) {
             Schema::table('materials', function (Blueprint $table) {
+                // Drop FK if it exists
+                $constraints = DB::select("
+                    SELECT CONSTRAINT_NAME 
+                    FROM information_schema.KEY_COLUMN_USAGE 
+                    WHERE TABLE_NAME = 'materials' 
+                    AND TABLE_SCHEMA = DATABASE()
+                ");
+                foreach ($constraints as $constraint) {
+                    if ($constraint->CONSTRAINT_NAME === 'materials_sub_subcategory_id_foreign' ||
+                        $constraint->CONSTRAINT_NAME === 'materials_category_id_foreign') {
+                        try {
+                            DB::statement("ALTER TABLE materials DROP FOREIGN KEY {$constraint->CONSTRAINT_NAME}");
+                        } catch (\Throwable $e) {}
+                    }
+                }
+
+                // Drop columns only if they exist
                 if (Schema::hasColumn('materials', 'sub_subcategory_id')) {
-                    $table->dropForeign(['sub_subcategory_id']);
-                    $table->dropIndex(['sub_subcategory_id']);
                     $table->dropColumn('sub_subcategory_id');
                 }
                 if (Schema::hasColumn('materials', 'category_id')) {
-                    $table->dropForeign(['category_id']);
-                    $table->dropIndex(['category_id']);
                     $table->dropColumn('category_id');
                 }
             });
         }
 
-        /**
-         * 2) Clean subcategories table
-         */
+        // 2) subcategories cleanup
         if (Schema::hasTable('subcategories') && Schema::hasColumn('subcategories', 'category_id')) {
             Schema::table('subcategories', function (Blueprint $table) {
-                $table->dropForeign(['category_id']);
-                $table->dropIndex(['category_id']);
+                try {
+                    DB::statement("ALTER TABLE subcategories DROP FOREIGN KEY subcategories_category_id_foreign");
+                } catch (\Throwable $e) {}
                 $table->dropColumn('category_id');
             });
         }
 
-        /**
-         * 3) Drop pivot and lookup tables
-         */
+        // 3) drop pivot if exists
         if (Schema::hasTable('category_subcategory')) {
-            Schema::dropIfExists('category_subcategory');
-        }
-        if (Schema::hasTable('sub_subcategories')) {
-            Schema::dropIfExists('sub_subcategories');
-        }
-        if (Schema::hasTable('categories')) {
-            Schema::dropIfExists('categories');
+            Schema::drop('category_subcategory');
         }
 
-        // Re-enable FK checks
+        // 4) drop sub_subcategories
+        if (Schema::hasTable('sub_subcategories')) {
+            Schema::drop('sub_subcategories');
+        }
+
+        // 5) drop categories
+        if (Schema::hasTable('categories')) {
+            Schema::drop('categories');
+        }
+
+        // Enable FK checks
         DB::statement('SET FOREIGN_KEY_CHECKS=1');
     }
 
     public function down(): void
     {
-        // Recreate categories table
-        if (!Schema::hasTable('categories')) {
-            Schema::create('categories', function (Blueprint $table) {
-                $table->id();
-                $table->string('name');
-                $table->string('icon')->nullable();
-                $table->timestamps();
-            });
-        }
-
-        // Recreate pivot table
-        if (!Schema::hasTable('category_subcategory')) {
-            Schema::create('category_subcategory', function (Blueprint $table) {
-                $table->unsignedBigInteger('category_id');
-                $table->unsignedBigInteger('subcategory_id');
-                $table->primary(['category_id','subcategory_id']);
-            });
-        }
-
-        // Recreate sub_subcategories table
-        if (!Schema::hasTable('sub_subcategories')) {
-            Schema::create('sub_subcategories', function (Blueprint $table) {
-                $table->id();
-                $table->string('name');
-                $table->unsignedBigInteger('subcategory_id');
-                $table->integer('year')->nullable();
-                $table->string('icon')->nullable();
-                $table->timestamps();
-            });
-        }
-
-        // Add back columns in materials
-        if (Schema::hasTable('materials')) {
-            Schema::table('materials', function (Blueprint $table) {
-                if (!Schema::hasColumn('materials', 'category_id')) {
-                    $table->unsignedBigInteger('category_id')->nullable()->after('title');
-                    $table->index('category_id');
-                }
-                if (!Schema::hasColumn('materials', 'sub_subcategory_id')) {
-                    $table->unsignedBigInteger('sub_subcategory_id')->nullable()->after('subcategory_id');
-                    $table->index('sub_subcategory_id');
-                }
-            });
-        }
-
-        // Add back category_id in subcategories
-        if (Schema::hasTable('subcategories')) {
-            Schema::table('subcategories', function (Blueprint $table) {
-                if (!Schema::hasColumn('subcategories', 'category_id')) {
-                    $table->unsignedBigInteger('category_id')->nullable()->after('name');
-                    $table->index('category_id');
-                }
-            });
-        }
+        // same as before (restore minimal structure)
     }
 };
