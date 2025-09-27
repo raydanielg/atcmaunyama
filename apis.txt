@@ -101,13 +101,63 @@ Public Mobile Endpoints
    - GET /api/mobile/content/notes/{id}/download  (requires premium flag in request)
    - Example (list with download links):
      curl "http://127.0.0.1:8000/api/mobile/content/notes?premium=1"
-   - Example (preview inline):
-     curl -I "http://127.0.0.1:8000/api/mobile/content/notes/123/preview"
 
 10) Maintenance Status (Public)
    - GET /api/mobile/maintenance
    - Response: { enabled: boolean, message: string|null, started_at: ISO8601|null, ended_at: ISO8601|null, updated_at: ISO8601|null }
    - Example: curl http://127.0.0.1:8000/api/mobile/maintenance
+
+11) User Content Creation (Authenticated Users)
+    - POST /api/user/notes
+      Create a new note with optional file upload
+      Body (JSON): { title, body?, level_id?, subject_id?, class_id?, semister_id?, file (multipart) }
+      Response: { success, message, data: { id, title, created_at, file_attached } }
+      Validation: title (required), file (optional, max 20MB, PDF/DOC/PPT/TXT)
+      Example:
+        curl -X POST -H "Authorization: Bearer <token>" \
+             -F "title=Physics Notes Chapter 1" \
+             -F "body=Introduction to mechanics" \
+             -F "level_id=1" \
+             -F "subject_id=5" \
+             -F "class_id=3" \
+             -F "file=@/path/to/notes.pdf" \
+             http://127.0.0.1:8000/api/user/notes
+
+    - GET /api/user/notes
+      Get user's own notes with optional filtering
+      Query: q (search title), level_id, class_id, subject_id
+      Response: { success, data: [...], pagination: {...} }
+      Example: curl -H "Authorization: Bearer <token>" \
+                   "http://127.0.0.1:8000/api/user/notes?level_id=1&q=physics"
+
+    - POST /api/user/materials
+      Upload a new material with file
+      Body (JSON): { title, subcategory_id, sub_subcategory_id?, level_id, subject_id, class_id, file (multipart) }
+      Response: { success, message, data: { id, title, slug, download_url, created_at } }
+      Validation: All fields required except sub_subcategory_id, file (required, max 25MB, PDF/DOC/PPT/XLS)
+      Example:
+        curl -X POST -H "Authorization: Bearer <token>" \
+             -F "title=Advanced Mathematics Textbook" \
+             -F "subcategory_id=2" \
+             -F "level_id=2" \
+             -F "subject_id=8" \
+             -F "class_id=5" \
+             -F "file=@/path/to/textbook.pdf" \
+             http://127.0.0.1:8000/api/user/materials
+
+    - GET /api/user/materials
+      Get user's own materials with optional filtering
+      Query: q (search title), level_id, class_id, subject_id
+      Response: { success, data: [...], pagination: {...} }
+      Example: curl -H "Authorization: Bearer <token>" \
+                   "http://127.0.0.1:8000/api/user/materials?subject_id=8"
+
+    - GET /api/user/taxonomy
+      Get taxonomy data for content creation (levels, subjects, classes, semisters, material_types)
+      Response: { success, data: { classes, levels, subjects, semisters, material_types } }
+      Example: curl -H "Authorization: Bearer <token>" \
+                   http://127.0.0.1:8000/api/user/taxonomy
+
 
 Authentication Endpoints
 1) Registration (API)

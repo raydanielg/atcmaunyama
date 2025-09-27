@@ -117,7 +117,7 @@
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="4" class="px-4 py-6 text-center text-gray-500">No levels found.</td>
+                        <td colspan="4" class="px-4 py-6 text-center text-gray-500">No courses found.</td>
                     </tr>
                 @endforelse
                 </tbody>
@@ -127,13 +127,13 @@
         <div class="mt-4">{{ ($levels ?? null)?->links() }}</div>
     </div>
 
-    <!-- Add Level Modal -->
-    <div id="addLevelModal" class="fixed inset-0 bg-black/40 z-40 hidden">
+    <!-- Add Course Modal -->
+    <div id="addCourseModal" class="fixed inset-0 bg-black/40 z-40 hidden">
         <div class="min-h-full flex items-center justify-center p-4">
             <div class="w-full max-w-xl bg-white rounded-xl shadow-lg overflow-hidden">
                 <div class="flex items-center justify-between px-4 py-3 border-b">
-                    <h3 class="text-lg font-semibold">Add Level</h3>
-                    <button type="button" id="btnCloseAddLevel" class="p-1 rounded hover:bg-gray-100" aria-label="Close">
+                    <h3 class="text-lg font-semibold">Add Course</h3>
+                    <button type="button" id="btnCloseAddCourse" class="p-1 rounded hover:bg-gray-100" aria-label="Close">
                         <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
                     </button>
                 </div>
@@ -142,11 +142,11 @@
                         @csrf
                         <div>
                             <label class="block text-sm font-medium text-gray-700">Name</label>
-                            <input type="text" id="addLevelName" name="name" required class="mt-1 w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" />
+                            <input type="text" id="addCourseName" name="name" required class="mt-1 w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" />
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700">Description</label>
-                            <textarea id="addLevelDescription" name="description" rows="3" class="mt-1 w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"></textarea>
+                            <textarea id="addCourseDescription" name="description" rows="3" class="mt-1 w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"></textarea>
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-gray-700">Icon (paste SVG markup)</label>
@@ -161,7 +161,7 @@
                                 <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg>
                                 <span>Save</span>
                             </button>
-                            <button type="button" id="btnCancelAddLevel" class="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50 text-sm">Cancel</button>
+                            <button type="button" id="btnCancelAddCourse" class="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50 text-sm">Cancel</button>
                         </div>
                     </form>
                 </div>
@@ -240,18 +240,18 @@
         </div>
     </div>
 
-    <!-- Edit Level Modal -->
-    <div id="editLevelModal" class="fixed inset-0 bg-black/40 z-40 hidden">
+    <!-- Edit Course Modal -->
+    <div id="editCourseModal" class="fixed inset-0 bg-black/40 z-40 hidden">
         <div class="min-h-full flex items-center justify-center p-4">
             <div class="w-full max-w-xl bg-white rounded-xl shadow-lg overflow-hidden">
                 <div class="flex items-center justify-between px-4 py-3 border-b">
-                    <h3 class="text-lg font-semibold">Edit Level</h3>
-                    <button type="button" id="btnCloseEditLevel" class="p-1 rounded hover:bg-gray-100" aria-label="Close">
+                    <h3 class="text-lg font-semibold">Edit Course</h3>
+                    <button type="button" id="btnCloseEditCourse" class="p-1 rounded hover:bg-gray-100" aria-label="Close">
                         <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
                     </button>
                 </div>
                 <div class="p-4">
-                    <form id="editLevelForm" method="POST" class="space-y-4">
+                    <form id="editCourseForm" method="POST" class="space-y-4">
                         @csrf
                         @method('PUT')
                         <input type="hidden" name="_target" id="editTarget" value="" />
@@ -275,7 +275,7 @@
                                 <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg>
                                 <span>Update</span>
                             </button>
-                            <button type="button" id="btnCancelEditLevel" class="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50 text-sm">Cancel</button>
+                            <button type="button" id="btnCancelEditCourse" class="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50 text-sm">Cancel</button>
                         </div>
                     </form>
                 </div>
@@ -285,23 +285,23 @@
 
     <script>
     (function(){
-        const addModal = document.getElementById('addLevelModal');
-        const editModal = document.getElementById('editLevelModal');
+        const addModal = document.getElementById('addCourseModal');
+        const editModal = document.getElementById('editCourseModal');
         const btnOpenAdd = document.getElementById('btnOpenAddLevel');
-        const btnCloseAdd = document.getElementById('btnCloseAddLevel');
-        const btnCancelAdd = document.getElementById('btnCancelAddLevel');
-        const btnCloseEdit = document.getElementById('btnCloseEditLevel');
-        const btnCancelEdit = document.getElementById('btnCancelEditLevel');
+        const btnCloseAdd = document.getElementById('btnCloseAddCourse');
+        const btnCancelAdd = document.getElementById('btnCancelAddCourse');
+        const btnCloseEdit = document.getElementById('btnCloseEditCourse');
+        const btnCancelEdit = document.getElementById('btnCancelEditCourse');
         const addIconInput = document.getElementById('addIconInput');
         const addIconPreviewC = document.getElementById('addIconPreviewContainer');
         const editIconInput = document.getElementById('editIconInput');
         const editIconPreviewC = document.getElementById('editIconPreviewContainer');
-        const editForm = document.getElementById('editLevelForm');
+        const editForm = document.getElementById('editCourseForm');
         const editTarget = document.getElementById('editTarget');
         const editName = document.getElementById('editName');
         const editDesc = document.getElementById('editDescription');
-        const addName = document.getElementById('addLevelName');
-        const addDesc = document.getElementById('addLevelDescription');
+        const addName = document.getElementById('addCourseName');
+        const addDesc = document.getElementById('addCourseDescription');
 
         function open(el){ el.classList.remove('hidden'); }
         function close(el){ el.classList.add('hidden'); }

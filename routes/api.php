@@ -61,5 +61,16 @@ Route::middleware('api')->group(function () {
     Route::get('/mobile/content/notes/{id}', [\App\Http\Controllers\Api\ContentController::class, 'note']);
     Route::get('/mobile/content/notes/{id}/preview', [\App\Http\Controllers\Api\ContentController::class, 'preview'])->name('api.notes.preview');
     Route::get('/mobile/content/notes/{id}/download', [\App\Http\Controllers\Api\ContentController::class, 'download'])->name('api.notes.download');
+    
+    // User Content Creation (requires authentication)
+    Route::middleware('auth:sanctum')->group(function () {
+        Route::post('/user/notes', [\App\Http\Controllers\Api\UserContentController::class, 'storeNote']);
+        Route::get('/user/notes', [\App\Http\Controllers\Api\UserContentController::class, 'myNotes']);
+        
+        Route::post('/user/materials', [\App\Http\Controllers\Api\UserContentController::class, 'storeMaterial']);
+        Route::get('/user/materials', [\App\Http\Controllers\Api\UserContentController::class, 'myMaterials']);
+        
+        // Get taxonomy data for content creation
+        Route::get('/user/taxonomy', [\App\Http\Controllers\Api\UserContentController::class, 'taxonomy']);
+    });
 });
-
