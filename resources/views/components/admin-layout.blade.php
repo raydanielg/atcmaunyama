@@ -196,7 +196,7 @@
                                 </a>
                                 <a href="{{ route('learning.levels.index') }}" class="flex items-center gap-3 rounded-lg px-3 py-2 text-sm {{ request()->routeIs('learning.levels.*') ? 'bg-gray-100 text-gray-900' : 'text-gray-700 hover:bg-gray-50' }}">
                                     <span class="material-symbols-outlined text-[20px]">school</span>
-                                    <span>Education Levels</span>
+                                    <span>Courses</span>
                                 </a>
                                 <a href="{{ route('learning.subjects.index') }}" class="flex items-center gap-3 rounded-lg px-3 py-2 text-sm {{ request()->routeIs('learning.subjects.*') ? 'bg-gray-100 text-gray-900' : 'text-gray-700 hover:bg-gray-50' }}">
                                     <span class="material-symbols-outlined text-[20px]">library_books</span>

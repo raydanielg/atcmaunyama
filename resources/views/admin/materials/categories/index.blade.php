@@ -2,8 +2,8 @@
     <div class="py-4">
         <div class="flex items-center justify-between mb-2">
             <div>
-                <h1 class="text-xl font-semibold text-gray-900">Material Level</h1>
-                <p class="text-sm text-gray-500">Read-only view. Assignments are managed from Learning → Education Levels.</p>
+                <h1 class="text-xl font-semibold text-gray-900">Material Course</h1>
+                <p class="text-sm text-gray-500">Read-only view. Assignments are managed from Learning → Courses.</p>
             </div>
         </div>
         <div class="border-t border-dashed mb-4"></div>
@@ -11,7 +11,7 @@
         <div class="mb-3 flex items-start justify-between gap-4">
             <form method="GET" class="flex items-center gap-2 relative" autocomplete="off">
                 <div class="relative">
-                    <input id="catSearchInput" type="text" name="q" value="{{ $q ?? '' }}" placeholder="Search levels..." class="w-72 border rounded-lg px-3 py-2 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" />
+                    <input id="catSearchInput" type="text" name="q" value="{{ $q ?? '' }}" placeholder="Search courses..." class="w-72 border rounded-lg px-3 py-2 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" />
                     <div id="catSuggestBox" class="absolute z-10 mt-1 w-full bg-white border rounded-lg shadow hidden max-h-56 overflow-auto"></div>
                 </div>
                 <button class="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50 text-sm">
@@ -93,10 +93,10 @@
 </defs>
 </svg>
                                     </div>
-                                    <div class="text-gray-500 text-sm">No levels yet. Start by adding one.</div>
+                                    <div class="text-gray-500 text-sm">No courses yet. Start by adding one.</div>
                                     <button id="btnOpenAddCatEmpty" class="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-sm shadow">
                                         <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" /></svg>
-                                        <span>Add Level</span>
+                                        <span>Add Course</span>
                                     </button>
                                 </div>
                             </td>

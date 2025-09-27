@@ -259,7 +259,7 @@ Route::middleware(['auth', 'verified', 'admin'])->group(function () {
 
             // Learning
             ['title' => 'All Notes', 'section' => 'Learning', 'url' => route('learning.notes.index')],
-            ['title' => 'Education Levels', 'section' => 'Learning', 'url' => route('learning.levels.index')],
+            ['title' => 'Courses', 'section' => 'Learning', 'url' => route('learning.levels.index')],
             ['title' => 'Subjects', 'section' => 'Learning', 'url' => route('learning.subjects.index')],
             ['title' => 'Classes', 'section' => 'Learning', 'url' => route('learning.classes.index')],
 

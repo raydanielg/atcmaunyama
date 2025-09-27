@@ -1,12 +1,12 @@
-        <x-admin-layout title="Education Levels">
+        <x-admin-layout title="Courses">
     <div class="px-4 py-4">
-        <div class="text-2xl font-semibold tracking-wide text-gray-800">EDUCATION LEVELS</div>
+        <div class="text-2xl font-semibold tracking-wide text-gray-800">COURSES</div>
         <div class="mt-2 border-t border-dashed"></div>
 
         <div class="mt-3 flex items-center justify-between">
             <form method="GET" class="w-full max-w-xs">
                 <div class="relative">
-                    <input type="text" name="s" value="{{ $s ?? '' }}" placeholder="Search level..." class="w-full pl-10 pr-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" />
+                    <input type="text" name="s" value="{{ $s ?? '' }}" placeholder="Search course..." class="w-full pl-10 pr-3 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" />
                     <span class="material-symbols-outlined absolute left-2 top-1/2 -translate-y-1/2 text-gray-400">search</span>
                 </div>
 
@@ -40,7 +40,7 @@
     </div>
             </form>
             <button type="button" id="btnOpenAddLevel" class="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-sm shadow">
-                <span class="material-symbols-outlined text-base">add_circle</span>
+                <span class="material-symbols-outlined">add_circle</span>
                 <span>Add Level</span>
             </button>
         </div>
