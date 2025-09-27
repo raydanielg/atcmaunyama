@@ -231,16 +231,16 @@
                             <input type="text" name="title" class="mt-1 w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" required />
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-700">Level of Education</label>
+                            <label class="block text-sm font-medium text-gray-700">Course</label>
                             <select name="level_id" id="levelSelect" class="mt-1 w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
-                                <option value="">Loading levels...</option>
+                                <option value="">Loading courses...</option>
                             </select>
                         </div>
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                             <div>
                                 <label class="block text-sm font-medium text-gray-700">Class</label>
                                 <select name="class_id" id="classSelect" class="mt-1 w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" disabled>
-                                    <option value="">Select level first...</option>
+                                    <option value="">Select course first...</option>
                                 </select>
                             </div>
                             <div>
@@ -317,7 +317,7 @@
         function openModal(){ modal.classList.remove('hidden'); }
         function closeModal(){ modal.classList.add('hidden'); resetForm(); }
         function showSuccess(){ successPopup.classList.remove('hidden'); setTimeout(()=>{ successPopup.classList.add('hidden'); }, 1600); }
-        function resetForm(){ form.reset(); progressBar.style.width = '0%'; progressBar.textContent = ' 0%'; progressWrap.classList.add('hidden'); uploadIcon.style.display='none'; uploadText.textContent='Upload'; subjectSelect.innerHTML='<option value="">Select semester first...</option>'; classSelect.innerHTML='<option value="">Select level first...</option>'; if(semisterSelect){ semisterSelect.innerHTML='<option value="">Select class first...</option>'; semisterSelect.disabled=true; } }
+        function resetForm(){ form.reset(); progressBar.style.width = '0%'; progressBar.textContent = ' 0%'; progressWrap.classList.add('hidden'); uploadIcon.style.display='none'; uploadText.textContent='Upload'; subjectSelect.innerHTML='<option value="">Select semester first...</option>'; classSelect.innerHTML='<option value="">Select course first...</option>'; if(semisterSelect){ semisterSelect.innerHTML='<option value="">Select class first...</option>'; semisterSelect.disabled=true; } }
 
         btnOpen?.addEventListener('click', openModal);
         btnClose?.addEventListener('click', closeModal);
@@ -333,12 +333,12 @@
         async function loadLevels(){
             if (!levelSelect) return;
             levelSelect.disabled = true;
-            levelSelect.innerHTML = '<option value="">Loading levels...</option>';
+            levelSelect.innerHTML = '<option value="">Loading courses...</option>';
             try{
                 const data = await fetchJSON('{{ route('learning.notes.levels') }}');
-                levelSelect.innerHTML = '<option value="">Select level...</option>' + data.map(l=>`<option value="${l.id}">${l.name}</option>`).join('');
+                levelSelect.innerHTML = '<option value="">Select course...</option>' + data.map(l=>`<option value="${l.id}">${l.name}</option>`).join('');
             }catch(e){
-                levelSelect.innerHTML = '<option value="">Failed to load levels</option>';
+                levelSelect.innerHTML = '<option value="">Failed to load courses</option>';
             }finally{
                 levelSelect.disabled = false;
             }
@@ -351,7 +351,7 @@
             if (subjectSelect){ subjectSelect.disabled = true; subjectSelect.innerHTML = '<option value="">Select semester first...</option>'; }
             if (semisterSelect){ semisterSelect.disabled = true; semisterSelect.innerHTML = '<option value="">Select class first...</option>'; }
             if (!levelId){
-                classSelect.innerHTML = '<option value="">Select level first...</option>';
+                classSelect.innerHTML = '<option value="">Select course first...</option>';
                 return;
             }
             try{
@@ -400,7 +400,7 @@
 
         // Initialize levels when modal opens and reset dependent selects
         btnOpen?.addEventListener('click', ()=>{
-            if (classSelect){ classSelect.disabled = true; classSelect.innerHTML = '<option value="">Select level first...</option>'; }
+            if (classSelect){ classSelect.disabled = true; classSelect.innerHTML = '<option value="">Select course first...</option>'; }
             if (semisterSelect){ semisterSelect.disabled = true; semisterSelect.innerHTML = '<option value="">Select class first...</option>'; }
             if (subjectSelect){ subjectSelect.disabled = true; subjectSelect.innerHTML = '<option value="">Select semester first...</option>'; }
             loadLevels();
