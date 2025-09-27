@@ -8,6 +8,10 @@ use App\Models\Level;
 use App\Models\Semister;
 use App\Models\Subject;
 use App\Models\SchoolClass;
+use App\Support\ActivityLog;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 class NotesController extends Controller
 {

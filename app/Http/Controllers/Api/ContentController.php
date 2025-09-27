@@ -11,6 +11,7 @@ use App\Models\Category;
 use App\Models\Subcategory;
 use App\Models\SubSubcategory;
 use App\Models\Material;
+use App\Models\Semister;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 
@@ -25,6 +26,15 @@ class ContentController extends Controller
             return in_array($flag, ['1','true','yes','on'], true);
         }
         return (bool) $flag;
+    }
+
+    public function semisters(Request $request)
+    {
+        $items = Semister::query()
+            ->where('is_active', true)
+            ->orderByDesc('start_date')
+            ->get(['id','name','start_date','end_date']);
+        return response()->json(['data' => $items]);
     }
 
     public function levels(Request $request)
@@ -228,12 +238,22 @@ class ContentController extends Controller
     public function notes(Request $request)
     {
         $q = Note::query();
+        // Require a semister_id to be specified
+        $sem = $request->query('semister_id');
+        if (!$sem) {
+            return response()->json([
+                'message' => 'semister_id is required',
+                'data' => [],
+                'pagination' => ['current_page'=>1,'last_page'=>1,'per_page'=>20,'total'=>0],
+            ], 422);
+        }
+        $q->where('semister_id', $sem);
         if ($sid = $request->query('subject_id')) { $q->where('subject_id', $sid); }
         if ($lid = $request->query('level_id')) { $q->where('level_id', $lid); }
         if ($cid = $request->query('class_id')) { $q->where('class_id', $cid); }
         if ($search = $request->query('q')) { $q->where('title','like',"%{$search}%"); }
 
-        $notes = $q->orderByDesc('created_at')->paginate(20, ['id','title','subject_id','level_id','class_id','file_path','original_name','mime_type','file_size','created_at']);
+        $notes = $q->orderByDesc('created_at')->paginate(20, ['id','title','subject_id','level_id','class_id','semister_id','file_path','original_name','mime_type','file_size','created_at']);
 
         $premium = $this->isPremium($request);
         $data = collect($notes->items())->map(function ($n) use ($premium) {
@@ -249,6 +269,7 @@ class ContentController extends Controller
                 'previewUrl' => route('api.notes.preview', ['id' => $n->id]), // public inline preview
                 'canDownload' => $premium,
                 'downloadUrl' => $premium ? route('api.notes.download', ['id' => $n->id]) : null,
+                'semister_id' => $n->semister_id,
                 'created_at' => optional($n->created_at)->toIso8601String(),
             ];
         });

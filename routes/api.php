@@ -48,6 +48,7 @@ Route::middleware('api')->group(function () {
     Route::get('/mobile/content/levels', [\App\Http\Controllers\Api\ContentController::class, 'levels']);
     Route::get('/mobile/content/subjects', [\App\Http\Controllers\Api\ContentController::class, 'subjects']);
     Route::get('/mobile/content/classes', [\App\Http\Controllers\Api\ContentController::class, 'classes']);
+    Route::get('/mobile/content/semisters', [\App\Http\Controllers\Api\ContentController::class, 'semisters']);
     
     // Mobile maintenance status (public)
     Route::get('/mobile/maintenance', [\App\Http\Controllers\Api\MaintenanceController::class, 'show']);
@@ -55,6 +56,7 @@ Route::middleware('api')->group(function () {
     // Mobile update-app ping (public)
     Route::get('/mobile/notifications/update-app', [\App\Http\Controllers\Api\MobileNotificationsController::class, 'updateApp']);
     Route::get('/mobile/content/classes/{id}/subject', [\App\Http\Controllers\Api\ContentController::class, 'classSubject']);
+    // Notes require semister_id (and optional level_id, class_id, subject_id)
     Route::get('/mobile/content/notes', [\App\Http\Controllers\Api\ContentController::class, 'notes']);
     Route::get('/mobile/content/notes/{id}', [\App\Http\Controllers\Api\ContentController::class, 'note']);
     Route::get('/mobile/content/notes/{id}/preview', [\App\Http\Controllers\Api\ContentController::class, 'preview'])->name('api.notes.preview');
