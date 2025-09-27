@@ -143,6 +143,7 @@ Route::middleware(['auth', 'verified', 'admin'])->group(function () {
     // JSON endpoints for dependent selects
     Route::get('/learning/notes-levels', [\App\Http\Controllers\Admin\NotesController::class, 'levels'])->name('learning.notes.levels');
     Route::get('/learning/notes-subjects', [\App\Http\Controllers\Admin\NotesController::class, 'subjects'])->name('learning.notes.subjects');
+    Route::get('/learning/notes-classes', [\App\Http\Controllers\Admin\NotesController::class, 'classes'])->name('learning.notes.classes');
     Route::get('/learning/notes-semisters', [\App\Http\Controllers\Admin\NotesController::class, 'semisters'])->name('learning.notes.semisters');
     Route::get('/learning/levels', [\App\Http\Controllers\Admin\LevelsController::class, 'index'])->name('learning.levels.index');
     Route::post('/learning/levels', [\App\Http\Controllers\Admin\LevelsController::class, 'store'])->name('learning.levels.store');
