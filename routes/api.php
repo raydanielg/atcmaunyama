@@ -26,6 +26,20 @@ Route::middleware('api')->group(function () {
         Route::get('/', [\App\Http\Controllers\Api\MaterialsPublicController::class, 'materials']);
     });
 
+    // Public Blog API
+    Route::prefix('public/blog')->group(function(){
+        // List
+        Route::get('/', [\App\Http\Controllers\Api\BlogController::class, 'index']);
+        // Detail by slug
+        Route::get('/{slug}', [\App\Http\Controllers\Api\BlogController::class, 'show']);
+        // Optional detail by id for convenience
+        Route::get('/id/{id}', [\App\Http\Controllers\Api\BlogController::class, 'showById']);
+        // Comments (public; user_id optional)
+        Route::post('/{slug}/comments', [\App\Http\Controllers\Api\BlogController::class, 'storeComment']);
+        // Reactions
+        Route::post('/{slug}/react', [\App\Http\Controllers\Api\BlogController::class, 'react']);
+    });
+
     // Regions
     Route::get('/mobile/regions', [RegionController::class, 'index']);
     Route::get('/regions', [RegionController::class, 'index']);

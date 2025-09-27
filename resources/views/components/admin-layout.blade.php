@@ -229,6 +229,19 @@
                                     <span>Material Sub Type</span>
                                 </a>
                             </div>
+                        <!-- CMS -->
+                        <div>
+                            <button type="button" class="w-full flex items-center justify-between px-3 py-2 rounded-lg hover:bg-gray-50" onclick="window.__toggleSection('cms')">
+                                <span class="text-xs font-semibold text-gray-600 uppercase tracking-wide">CMS</span>
+                                <svg id="caret-cms" class="h-4 w-4 text-gray-400 transition-transform" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.17l3.71-3.94a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clip-rule="evenodd"/></svg>
+                            </button>
+                            <div id="section-cms" class="mt-1 space-y-1">
+                                <a href="{{ route('cms.blog.posts.index') }}" class="flex items-center gap-3 rounded-lg px-3 py-2 text-sm {{ request()->routeIs('cms.blog.posts.*') ? 'bg-gray-100 text-gray-900' : 'text-gray-700 hover:bg-gray-50' }}">
+                                    <span class="material-symbols-outlined text-[20px]">article</span>
+                                    <span>Blog</span>
+                                </a>
+                            </div>
+                        </div>
                         <!-- Academic -->
                         <div>
                             <button type="button" class="w-full flex items-center justify-between px-3 py-2 rounded-lg hover:bg-gray-50" onclick="window.__toggleSection('academic')">
@@ -327,8 +340,12 @@
         show();
     }, true);
 
-    // Show on form submissions
+    // Show on form submissions (except forms explicitly opting out)
     document.addEventListener('submit', function(e){
+        try {
+            const form = e.target.closest('form');
+            if (form && form.hasAttribute('data-no-loader')) return; // skip showing loader
+        } catch {}
         show();
     }, true);
 })();
@@ -483,6 +500,8 @@ document.addEventListener('keydown', function(e){
 })();
 
 </script>
+
+@stack('scripts')
 
 </body>
 </html>

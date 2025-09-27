@@ -24,7 +24,7 @@
             </div>
         @endif
 
-        <form method="POST" action="{{ route('learning.notes.store') }}" class="mt-4 space-y-4" enctype="multipart/form-data">
+        <form id="note-form" method="POST" action="{{ route('learning.notes.store') }}" class="mt-4 space-y-4" enctype="multipart/form-data" data-no-loader>
             @csrf
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
@@ -105,6 +105,14 @@
                     <span>Cancel</span>
                 </a>
             </div>
+            <!-- Inline upload progress and errors -->
+            <div id="upload-area" class="mt-3 hidden">
+                <div class="w-full bg-gray-100 rounded-lg overflow-hidden">
+                    <div id="upload-bar" class="h-2 bg-indigo-600" style="width:0%"></div>
+                </div>
+                <div class="mt-2 text-xs text-gray-500"><span id="upload-text">Preparing upload...</span></div>
+            </div>
+            <div id="form-errors" class="mt-3 hidden p-3 rounded bg-red-50 text-red-700 border border-red-200 text-sm"></div>
         </form>
     </div>
 
@@ -115,6 +123,12 @@
             const classSelect = document.getElementById('class');
             const subjectSelect = document.getElementById('subject');
             const semisterSelect = document.getElementById('semister');
+            const form = document.getElementById('note-form');
+            const submitBtn = form.querySelector('button[type="submit"]');
+            const uploadArea = document.getElementById('upload-area');
+            const uploadBar = document.getElementById('upload-bar');
+            const uploadText = document.getElementById('upload-text');
+            const errorBox = document.getElementById('form-errors');
 
             // Load classes when level changes
             if (levelSelect) {
@@ -133,7 +147,7 @@
                     }
                     
                     // Fetch classes for the selected level
-                    fetch(`/admin/learning/notes/classes?level_id=${levelId}`)
+                    fetch(`{{ route('learning.notes.classes') }}?level_id=${levelId}`)
                         .then(response => response.json())
                         .then(data => {
                             classSelect.innerHTML = '<option value="">Select Class</option>';
@@ -175,7 +189,7 @@
                     }
                     
                     // Fetch subjects for the selected class
-                    fetch(`/admin/learning/notes-subjects?class_id=${classId}`)
+                    fetch(`{{ route('learning.notes.subjects') }}?class_id=${classId}`)
                         .then(response => response.json())
                         .then(data => {
                             subjectSelect.innerHTML = '<option value="">Select Subject</option>';
@@ -198,11 +212,79 @@
                             subjectSelect.innerHTML = '<option value="">Error loading subjects</option>';
                         });
                 });
-            }
-
+            
             // Trigger level change on page load if level is already selected
             if (levelSelect && levelSelect.value) {
                 levelSelect.dispatchEvent(new Event('change'));
+            }
+
+            // Intercept form submit to avoid full page load; use XHR for progress support
+            if (form) {
+                form.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    errorBox.classList.add('hidden');
+                    errorBox.innerHTML = '';
+
+                    // UI: disable button and show uploading UI
+                    submitBtn.disabled = true;
+                    const originalBtnText = submitBtn.innerHTML;
+                    submitBtn.innerHTML = '<span class="material-symbols-outlined text-base">hourglass_top</span><span>Uploading...</span>';
+                    uploadArea.classList.remove('hidden');
+                    uploadBar.style.width = '0%';
+                    uploadText.textContent = 'Starting upload...';
+
+                    const formData = new FormData(form);
+                    const xhr = new XMLHttpRequest();
+                    xhr.open('POST', form.action, true);
+                    xhr.setRequestHeader('Accept', 'application/json');
+                    xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+
+                    // Progress events
+                    xhr.upload.addEventListener('progress', function(event) {
+                        if (event.lengthComputable) {
+                            const percent = Math.round((event.loaded / event.total) * 100);
+                            uploadBar.style.width = percent + '%';
+                            uploadText.textContent = 'Uploading... ' + percent + '%';
+                        }
+                    });
+
+                    xhr.onreadystatechange = function() {
+                        if (xhr.readyState === XMLHttpRequest.DONE) {
+                            if (xhr.status >= 200 && xhr.status < 300) {
+                                uploadBar.style.width = '100%';
+                                uploadText.textContent = 'Processing...';
+                                // Redirect to index after a short delay
+                                setTimeout(function() {
+                                    window.location.href = '{{ route('learning.notes.index') }}';
+                                }, 300);
+                            } else {
+                                // Try to parse validation errors
+                                try {
+                                    const res = JSON.parse(xhr.responseText);
+                                    const messages = [];
+                                    if (res && res.errors) {
+                                        Object.keys(res.errors).forEach(function(key) {
+                                            res.errors[key].forEach(function(msg) { messages.push(msg); });
+                                        });
+                                    } else if (res && res.message) {
+                                        messages.push(res.message);
+                                    } else {
+                                        messages.push('Failed to save. Please try again.');
+                                    }
+                                    errorBox.innerHTML = '<ul class="list-disc pl-5 space-y-1">' + messages.map(function(m){return '<li>'+m+'</li>';}).join('') + '</ul>';
+                                } catch (err) {
+                                    errorBox.textContent = 'Failed to save. Please check your connection and try again.';
+                                }
+                                errorBox.classList.remove('hidden');
+                                submitBtn.disabled = false;
+                                submitBtn.innerHTML = originalBtnText;
+                                uploadText.textContent = 'Upload failed';
+                            }
+                        }
+                    };
+
+                    xhr.send(formData);
+                });
             }
         });
     </script>

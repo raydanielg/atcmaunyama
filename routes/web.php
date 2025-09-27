@@ -238,6 +238,16 @@ Route::middleware(['auth', 'verified', 'admin'])->group(function () {
     Route::delete('/semesters/{semister}', [\App\Http\Controllers\Admin\SemisterController::class, 'destroy'])->name('admin.semisters.destroy');
     Route::patch('/semesters/{semister}/toggle-status', [\App\Http\Controllers\Admin\SemisterController::class, 'toggleStatus'])->name('admin.semisters.toggle_status');
 
+    // CMS - Blog
+    Route::prefix('cms/blog')->name('cms.blog.')->group(function(){
+        Route::get('/posts', [\App\Http\Controllers\Admin\BlogPostsController::class, 'index'])->name('posts.index');
+        Route::get('/posts/create', [\App\Http\Controllers\Admin\BlogPostsController::class, 'create'])->name('posts.create');
+        Route::post('/posts', [\App\Http\Controllers\Admin\BlogPostsController::class, 'store'])->name('posts.store');
+        Route::get('/posts/{post}/edit', [\App\Http\Controllers\Admin\BlogPostsController::class, 'edit'])->name('posts.edit');
+        Route::put('/posts/{post}', [\App\Http\Controllers\Admin\BlogPostsController::class, 'update'])->name('posts.update');
+        Route::delete('/posts/{post}', [\App\Http\Controllers\Admin\BlogPostsController::class, 'destroy'])->name('posts.destroy');
+    });
+
     
 
     // Layout mode toggle (fixed header+sidebar vs normal)
