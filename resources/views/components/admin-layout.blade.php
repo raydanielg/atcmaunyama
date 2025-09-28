@@ -244,6 +244,10 @@
                                     <span class="material-symbols-outlined text-[20px]">forum</span>
                                     <span>Comments</span>
                                 </a>
+                                <a href="{{ route('admin.notifications.index') }}" class="flex items-center gap-3 rounded-lg px-3 py-2 text-sm {{ request()->routeIs('admin.notifications.*') ? 'bg-gray-100 text-gray-900' : 'text-gray-700 hover:bg-gray-50' }}">
+                                    <span class="material-symbols-outlined text-[20px]">notifications</span>
+                                    <span>Notifications</span>
+                                </a>
                             </div>
                         </div>
                         <!-- Academic -->

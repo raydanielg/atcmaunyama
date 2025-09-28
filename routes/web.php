@@ -258,6 +258,20 @@ Route::middleware(['auth', 'verified', 'admin'])->group(function () {
         Route::delete('/comments/{comment}', [\App\Http\Controllers\Admin\BlogCommentsController::class, 'destroy'])->name('comments.destroy');
     });
 
+    // Admin - Notifications
+    Route::prefix('admin/notifications')->name('admin.notifications.')->group(function(){
+        Route::get('/', [\App\Http\Controllers\Admin\NotificationsController::class, 'index'])->name('index');
+        Route::get('/create', [\App\Http\Controllers\Admin\NotificationsController::class, 'create'])->name('create');
+        Route::post('/', [\App\Http\Controllers\Admin\NotificationsController::class, 'store'])->name('store');
+        Route::get('/{notification}', [\App\Http\Controllers\Admin\NotificationsController::class, 'show'])->name('show');
+        Route::get('/{notification}/edit', [\App\Http\Controllers\Admin\NotificationsController::class, 'edit'])->name('edit');
+        Route::put('/{notification}', [\App\Http\Controllers\Admin\NotificationsController::class, 'update'])->name('update');
+        Route::delete('/{notification}', [\App\Http\Controllers\Admin\NotificationsController::class, 'destroy'])->name('destroy');
+        Route::post('/{notification}/publish', [\App\Http\Controllers\Admin\NotificationsController::class, 'publish'])->name('publish');
+        Route::post('/{notification}/unpublish', [\App\Http\Controllers\Admin\NotificationsController::class, 'unpublish'])->name('unpublish');
+        Route::post('/{notification}/resend', [\App\Http\Controllers\Admin\NotificationsController::class, 'resend'])->name('resend');
+    });
+
     
 
     // Layout mode toggle (fixed header+sidebar vs normal)

@@ -44,15 +44,58 @@ class MobileNotificationsController extends Controller
 
     /**
      * GET /api/mobile/notifications
-     * Returns only currently active notifications (not expired; may be scheduled or active now).
+     * Returns active notifications. By default: only currently active (started and not expired).
+     * Optional: include_scheduled=1 will include scheduled (future start) items as well.
+     * Expired items are NEVER included.
      */
     public function listActive(Request $request)
     {
-        $items = Notification::query()
-            ->currentlyActive()
-            ->orderByDesc('id')
-            ->get(['id','title','message','action_label','action_url','starts_at','ends_at']);
-        return response()->json(['data' => $items]);
+        $includeScheduled = filter_var($request->query('include_scheduled'), FILTER_VALIDATE_BOOLEAN);
+
+        $now = now();
+        $q = Notification::query()
+            ->where('is_active', true)
+            // exclude expired
+            ->where(function($w) use ($now){
+                $w->whereNull('ends_at')->orWhere('ends_at','>=',$now);
+            })
+            // when not including scheduled, require started
+            ->when(!$includeScheduled, function($qq) use ($now){
+                $qq->where(function($w) use ($now){
+                    $w->whereNull('starts_at')->orWhere('starts_at','<=',$now);
+                });
+            })
+            ->orderByDesc('id');
+
+        $debug = filter_var($request->query('debug'), FILTER_VALIDATE_BOOLEAN);
+        $rows = $q->get();
+        if (!$debug) {
+            $items = $rows->map(function($n){
+                return [
+                    'id' => $n->id,
+                    'title' => $n->title,
+                    'message' => $n->message,
+                    'action_label' => $n->action_label,
+                    'action_url' => $n->action_url,
+                    'starts_at' => optional($n->starts_at)->toIso8601String(),
+                    'ends_at' => optional($n->ends_at)->toIso8601String(),
+                ];
+            });
+            return response()->json(['data' => $items]);
+        } else {
+            // Debug includes status and is_active to help diagnose visibility issues
+            $items = $rows->map(function($n){
+                return [
+                    'id' => $n->id,
+                    'title' => $n->title,
+                    'is_active' => (bool)$n->is_active,
+                    'status' => $n->status,
+                    'starts_at' => optional($n->starts_at)->toIso8601String(),
+                    'ends_at' => optional($n->ends_at)->toIso8601String(),
+                ];
+            });
+            return response()->json(['data' => $items]);
+        }
     }
 
     /**
