@@ -25,23 +25,37 @@ Route::middleware('api')->group(function () {
     Route::get('/mobile/content/subjects-for-class-semister', [\App\Http\Controllers\Api\ContentController::class, 'subjectsForClassSemister']);
     Route::get('/mobile/content/classes', [\App\Http\Controllers\Api\ContentController::class, 'classes']);
     Route::get('/mobile/content/semisters', [\App\Http\Controllers\Api\ContentController::class, 'semisters']);
+    Route::get('/mobile/content/next-options', [\App\Http\Controllers\Api\ContentController::class, 'nextOptions']);
     
     // Mobile maintenance status (public)
     Route::get('/mobile/maintenance', [\App\Http\Controllers\Api\MaintenanceController::class, 'show']);
     // Mobile update-app ping (public)
     Route::get('/mobile/notifications/update-app', [\App\Http\Controllers\Api\MobileNotificationsController::class, 'updateApp']);
-    Route::get('/mobile/content/classes/{id}/subject', [\App\Http\Controllers\Api\ContentController::class, 'classSubject']);
     // Notes require semister_id (and optional level_id, class_id, subject_id)
     Route::get('/mobile/content/notes', [\App\Http\Controllers\Api\ContentController::class, 'notes']);
     Route::get('/mobile/content/notes/{id}', [\App\Http\Controllers\Api\ContentController::class, 'note']);
-    Route::get('/mobile/content/notes/{id}/preview', [\App\Http\Controllers\Api\ContentController::class, 'preview'])->name('api.notes.preview');
     Route::get('/mobile/content/notes/{id}/download', [\App\Http\Controllers\Api\ContentController::class, 'download'])->name('api.notes.download');
+
+    // Public Blog API
+    Route::prefix('public/blog')->group(function(){
+        // List
+        Route::get('/', [\App\Http\Controllers\Api\BlogController::class, 'index']);
+        // Optional detail by id for convenience
+        Route::get('/id/{id}', [\App\Http\Controllers\Api\BlogController::class, 'showById']);
+        // Image (hero) by slug (must be before the catch-all slug route)
+        Route::get('/{slug}/image', [\App\Http\Controllers\Api\BlogController::class, 'image']);
+        // Detail by slug (keep last to avoid swallowing more specific routes)
+        Route::get('/{slug}', [\App\Http\Controllers\Api\BlogController::class, 'show']);
+        // Comments (public; user_id optional)
+        Route::post('/{slug}/comments', [\App\Http\Controllers\Api\BlogController::class, 'storeComment']);
+        // Reactions
+        Route::post('/{slug}/react', [\App\Http\Controllers\Api\BlogController::class, 'react']);
+    });
     
     // User Content Creation (requires authentication)
     Route::middleware('auth:sanctum')->group(function () {
         Route::post('/user/notes', [\App\Http\Controllers\Api\UserContentController::class, 'storeNote']);
-        Route::get('/user/notes', [\App\Http\Controllers\Api\UserContentController::class, 'myNotes']);
-        
+{{ ... }}
         Route::post('/user/materials', [\App\Http\Controllers\Api\UserContentController::class, 'storeMaterial']);
         Route::get('/user/materials', [\App\Http\Controllers\Api\UserContentController::class, 'myMaterials']);
         

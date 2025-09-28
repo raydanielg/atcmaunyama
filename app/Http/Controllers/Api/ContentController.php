@@ -14,6 +14,7 @@ use App\Models\Material;
 use App\Models\Semister;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\DB;
 
 class ContentController extends Controller
 {
@@ -397,11 +398,73 @@ class ContentController extends Controller
             ->when($levelId, fn($qq) => $qq->where('level_id', $levelId))
             ->whereNotNull('subject_id')
             ->join('subjects', 'subjects.id', '=', 'notes.subject_id')
-            ->select('subjects.id','subjects.name')
-            ->distinct()
-            ->orderBy('subjects.name');
+            ->groupBy('subjects.id','subjects.name')
+            ->orderBy('subjects.name')
+            ->select([
+                'subjects.id',
+                'subjects.name',
+                DB::raw('COUNT(notes.id) as notesCount')
+            ]);
 
         $subjects = $q->get();
         return response()->json(['data' => $subjects]);
+    }
+
+    /**
+     * Next-options helper for client flow.
+     * Given partial selections, returns what the client should load next.
+     * Params (all optional): level_id, class_id, semister_id
+     * Response may contain: levels[], classes[], semisters[], subjects[] (subjects include notesCount)
+     */
+    public function nextOptions(Request $request)
+    {
+        $levelId = $request->query('level_id');
+        $classId = $request->query('class_id');
+        $semId = $request->query('semister_id');
+
+        $out = [];
+
+        if (!$levelId) {
+            $out['levels'] = Level::query()->orderBy('name')->get(['id','name','description','icon']);
+            return response()->json($out);
+        }
+
+        if ($levelId && !$classId) {
+            $classes = SchoolClass::query()
+                ->where('level_id', $levelId)
+                ->orderBy('name')
+                ->get(['id','name','subject_id','level_id','description']);
+            $out['classes'] = $classes;
+            return response()->json($out);
+        }
+
+        if ($levelId && $classId && !$semId) {
+            $out['semisters'] = Semister::query()
+                ->where('is_active', true)
+                ->orderByDesc('start_date')
+                ->get(['id','name','start_date','end_date']);
+            return response()->json($out);
+        }
+
+        if ($levelId && $classId && $semId) {
+            // Reuse logic from subjectsForClassSemister including counts
+            $subjects = Note::query()
+                ->where('class_id', $classId)
+                ->where('semister_id', $semId)
+                ->where('level_id', $levelId)
+                ->whereNotNull('subject_id')
+                ->join('subjects', 'subjects.id', '=', 'notes.subject_id')
+                ->groupBy('subjects.id','subjects.name')
+                ->orderBy('subjects.name')
+                ->select([
+                    'subjects.id',
+                    'subjects.name',
+                    DB::raw('COUNT(notes.id) as notesCount')
+                ])->get();
+            $out['subjects'] = $subjects;
+            return response()->json($out);
+        }
+
+        return response()->json($out);
     }
 }
