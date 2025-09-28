@@ -55,7 +55,6 @@ Route::middleware('api')->group(function () {
     // User Content Creation (requires authentication)
     Route::middleware('auth:sanctum')->group(function () {
         Route::post('/user/notes', [\App\Http\Controllers\Api\UserContentController::class, 'storeNote']);
-{{ ... }}
         Route::post('/user/materials', [\App\Http\Controllers\Api\UserContentController::class, 'storeMaterial']);
         Route::get('/user/materials', [\App\Http\Controllers\Api\UserContentController::class, 'myMaterials']);
         
