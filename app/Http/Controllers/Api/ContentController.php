@@ -467,4 +467,91 @@ class ContentController extends Controller
 
         return response()->json($out);
     }
+
+    /**
+     * PUBLIC MATERIALS BROWSING API
+     */
+    public function publicMaterialsTypes(Request $request)
+    {
+        $types = Subcategory::query()
+            ->where('name', '!=', 'Unassigned')
+            ->orderBy('name')
+            ->get(['id','name']);
+        return response()->json($types);
+    }
+
+    public function publicMaterialsLevels(Request $request, int $type_id)
+    {
+        $levels = DB::table('materials')
+            ->join('levels','levels.id','=','materials.level_id')
+            ->where('materials.subcategory_id', $type_id)
+            ->whereNotNull('materials.level_id')
+            ->select('levels.id','levels.name')
+            ->distinct()
+            ->orderBy('levels.name')
+            ->get();
+        return response()->json($levels);
+    }
+
+    public function publicMaterialsSubjects(Request $request, int $type_id, int $level_id)
+    {
+        $subjects = DB::table('materials')
+            ->join('subjects','subjects.id','=','materials.subject_id')
+            ->where('materials.subcategory_id', $type_id)
+            ->where('materials.level_id', $level_id)
+            ->whereNotNull('materials.subject_id')
+            ->orderBy('subjects.name')
+            ->distinct()
+            ->pluck('subjects.name');
+        return response()->json(array_values($subjects->toArray()));
+    }
+
+    public function publicMaterialsList(Request $request)
+    {
+        $typeId = $request->query('type_id');
+        $levelId = $request->query('level_id');
+        $subjectName = $request->query('subject_name');
+        $q = trim((string)$request->query('q', ''));
+
+        $rows = DB::table('materials')
+            ->leftJoin('subcategories','subcategories.id','=','materials.subcategory_id')
+            ->leftJoin('levels','levels.id','=','materials.level_id')
+            ->leftJoin('subjects','subjects.id','=','materials.subject_id')
+            ->when($typeId, fn($qq)=>$qq->where('materials.subcategory_id', $typeId))
+            ->when($levelId, fn($qq)=>$qq->where('materials.level_id', $levelId))
+            ->when($subjectName, fn($qq)=>$qq->where('subjects.name','like', "%$subjectName%"))
+            ->when($q !== '', fn($qq)=>$qq->where('materials.title','like', "%$q%"))
+            ->orderByDesc('materials.id')
+            ->select([
+                'materials.id',
+                'materials.title',
+                DB::raw("COALESCE(subcategories.name,'') as type_name"),
+                DB::raw("COALESCE(levels.name,'') as level_name"),
+                DB::raw("COALESCE(subjects.name,'') as subject_name"),
+                'materials.slug',
+                'materials.path',
+            ])
+            ->limit(200)
+            ->get();
+
+        $data = $rows->map(function($r){
+            // Prefer public download route via slug; fallback to inline preview by id if no slug
+            $url = null;
+            if (!empty($r->slug)) {
+                $url = route('materials.download', ['slug' => $r->slug]);
+            } elseif (!empty($r->id)) {
+                $url = route('materials.preview', ['material' => $r->id]);
+            }
+            return [
+                'id' => $r->id,
+                'title' => $r->title,
+                'type' => $r->type_name,
+                'level' => $r->level_name,
+                'subject' => $r->subject_name,
+                'url' => $url,
+            ];
+        });
+
+        return response()->json($data);
+    }
 }

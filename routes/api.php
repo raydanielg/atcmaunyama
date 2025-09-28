@@ -48,6 +48,18 @@ Route::middleware('api')->group(function () {
     Route::get('/mobile/content/notes/{id}/preview', [\App\Http\Controllers\Api\ContentController::class, 'preview'])->name('api.notes.preview');
     Route::get('/mobile/content/notes/{id}/download', [\App\Http\Controllers\Api\ContentController::class, 'download'])->name('api.notes.download');
 
+    // Public Materials Browsing API
+    Route::prefix('public/materials')->group(function(){
+        // List material types (Subcategories)
+        Route::get('/types', [\App\Http\Controllers\Api\ContentController::class, 'publicMaterialsTypes']);
+        // List Levels for a given material type (distinct levels that have materials of this type)
+        Route::get('/types/{type_id}/levels', [\App\Http\Controllers\Api\ContentController::class, 'publicMaterialsLevels']);
+        // List Subjects for a given type+level (distinct subject names that have materials)
+        Route::get('/types/{type_id}/levels/{level_id}/subjects', [\App\Http\Controllers\Api\ContentController::class, 'publicMaterialsSubjects']);
+    });
+    // List Materials (filterable)
+    Route::get('/public/materials', [\App\Http\Controllers\Api\ContentController::class, 'publicMaterialsList']);
+
     // Public Blog API
     Route::prefix('public/blog')->group(function(){
         // List
