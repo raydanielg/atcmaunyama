@@ -31,6 +31,8 @@ Route::middleware('api')->group(function () {
     Route::get('/mobile/maintenance', [\App\Http\Controllers\Api\MaintenanceController::class, 'show']);
     // Mobile update-app ping (public)
     Route::get('/mobile/notifications/update-app', [\App\Http\Controllers\Api\MobileNotificationsController::class, 'updateApp']);
+    // Mobile simple heartbeat
+    Route::get('/mobile/notification', [\App\Http\Controllers\Api\MobileNotificationsController::class, 'ping']);
     // Notes require semister_id (and optional level_id, class_id, subject_id)
     Route::get('/mobile/content/notes', [\App\Http\Controllers\Api\ContentController::class, 'notes']);
     Route::get('/mobile/content/notes/{id}', [\App\Http\Controllers\Api\ContentController::class, 'note']);

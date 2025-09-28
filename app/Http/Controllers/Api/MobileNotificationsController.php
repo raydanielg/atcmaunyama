@@ -27,4 +27,17 @@ class MobileNotificationsController extends Controller
             'ts' => now()->toISOString(),
         ]);
     }
+
+    /**
+     * GET /api/mobile/notification
+     * Simple ping for mobile clients that just need a heartbeat.
+     */
+    public function ping(Request $request)
+    {
+        return response()->json([
+            'ok' => true,
+            'message' => 'Notification ping OK',
+            'ts' => now()->toISOString(),
+        ]);
+    }
 }
