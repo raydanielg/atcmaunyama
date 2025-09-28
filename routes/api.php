@@ -33,6 +33,12 @@ Route::middleware('api')->group(function () {
     Route::get('/mobile/notifications/update-app', [\App\Http\Controllers\Api\MobileNotificationsController::class, 'updateApp']);
     // Mobile simple heartbeat
     Route::get('/mobile/notification', [\App\Http\Controllers\Api\MobileNotificationsController::class, 'ping']);
+    // Notifications list (active only) and details
+    Route::get('/mobile/notifications', [\App\Http\Controllers\Api\MobileNotificationsController::class, 'listActive']);
+    Route::get('/mobile/notifications/{id}', [\App\Http\Controllers\Api\MobileNotificationsController::class, 'showActive']);
+    // Tracking stats
+    Route::post('/mobile/notifications/{id}/view', [\App\Http\Controllers\Api\MobileNotificationsController::class, 'trackView']);
+    Route::post('/mobile/notifications/{id}/click', [\App\Http\Controllers\Api\MobileNotificationsController::class, 'trackClick']);
     // Notes require semister_id (and optional level_id, class_id, subject_id)
     Route::get('/mobile/content/notes', [\App\Http\Controllers\Api\ContentController::class, 'notes']);
     Route::get('/mobile/content/notes/{id}', [\App\Http\Controllers\Api\ContentController::class, 'note']);
