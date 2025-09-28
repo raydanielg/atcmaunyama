@@ -39,6 +39,8 @@ Route::middleware('api')->group(function () {
     // Tracking stats
     Route::post('/mobile/notifications/{id}/view', [\App\Http\Controllers\Api\MobileNotificationsController::class, 'trackView']);
     Route::post('/mobile/notifications/{id}/click', [\App\Http\Controllers\Api\MobileNotificationsController::class, 'trackClick']);
+    // Click-through redirect (increments click and redirects to action_url)
+    Route::get('/mobile/notifications/{id}/go', [\App\Http\Controllers\Api\MobileNotificationsController::class, 'go']);
     // Notes require semister_id (and optional level_id, class_id, subject_id)
     Route::get('/mobile/content/notes', [\App\Http\Controllers\Api\ContentController::class, 'notes']);
     Route::get('/mobile/content/notes/{id}', [\App\Http\Controllers\Api\ContentController::class, 'note']);

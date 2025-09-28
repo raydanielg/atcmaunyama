@@ -137,4 +137,18 @@ class MobileNotificationsController extends Controller
         $n->increment('clicks');
         return response()->json(['ok' => true]);
     }
+
+    /**
+     * GET /api/mobile/notifications/{id}/go
+     * Increments clicks and redirects to action_url if present.
+     */
+    public function go(Request $request, int $id)
+    {
+        $n = Notification::query()->findOrFail($id);
+        $n->increment('clicks');
+        if ($n->action_url) {
+            return redirect()->away($n->action_url);
+        }
+        return response()->noContent();
+    }
 }
