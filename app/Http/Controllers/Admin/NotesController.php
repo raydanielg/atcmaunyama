@@ -167,6 +167,13 @@ class NotesController extends Controller
         $classes = SchoolClass::where('level_id', $levelId)
             ->orderBy('name')
             ->get(['id', 'name']);
+
+        // Fallback: if no classes are linked to this level yet, return all classes
+        // This ensures the UI dropdown is never empty, while admins can still pick
+        // the correct class and later fix level assignments.
+        if ($classes->isEmpty()) {
+            $classes = SchoolClass::orderBy('name')->get(['id','name']);
+        }
             
         return response()->json($classes);
     }
